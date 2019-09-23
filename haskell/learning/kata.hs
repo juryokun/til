@@ -1,8 +1,8 @@
 aPet :: [String]
 aPet = ["cat","dog"]
 
-name :: (String, String)
-name = ("Oscar", "mon")
+-- name :: (String, String)
+-- name = ("Oscar", "mon")
 
 halve :: Integer -> Integer
 halve value = value `div` 2
@@ -93,3 +93,20 @@ showName (NameWithMiddle f m l) = f ++ " " ++ m ++ " " ++ l
 
 name1 = Name "Jerome" "Salinger"
 name2 = NameWithMiddle "Jerome" "David" "Salinger"
+
+data Patient = Patient {name :: Name
+                , sex :: Sex
+                , age :: Int
+                , height :: Int
+                , weight :: Int
+                , bloodType :: BloodType
+}
+
+jackieSmith :: Patient
+jackieSmith = Patient {name = Name "Jackie" "Smith"
+              , age = 43
+              , sex = Female
+              , height = 62
+              , weight = 115
+              , bloodType = BloodType O Neg
+}
