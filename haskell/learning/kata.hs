@@ -110,3 +110,19 @@ jackieSmith = Patient {name = Name "Jackie" "Smith"
               , weight = 115
               , bloodType = BloodType O Neg
 }
+
+donorFor :: Patient -> Patient -> Bool
+donorFor p1 p2 = canDonateTo (bloodType p1) (bloodType p2)
+
+showSex :: Sex -> String
+showSex Male = "Male"
+showSex Female = "Female"
+
+patientSummary :: Patient -> String
+patientSummary patient = "Patient Name: " ++ showName (name patient) ++ "\n"
+                      ++ "Sex: " ++ showSex (sex patient) ++ "\n" 
+                      ++ "Age: " ++ show (age patient) ++ "\n" 
+                      ++ "Height: " ++ show (height patient)++ "\n" 
+                      ++ "Weight: " ++ show (weight patient) ++ "\n" 
+                      ++ "Blood Type: " ++ showBloodType (bloodType patient) ++ "\n" 
+
