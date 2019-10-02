@@ -1,5 +1,5 @@
 aPet :: [String]
-aPet = ["cat","dog"]
+aPet = ["cat", "dog"]
 
 -- name :: (String, String)
 -- name = ("Oscar", "mon")
@@ -14,16 +14,15 @@ printDouble :: Int -> String
 printDouble value = show (value * 2)
 
 myHead :: [a] -> a
-myHead (x:xs) = x
+myHead (x : xs) = x
 
 myTail :: [a] -> [a]
-myTail [] = []
-myTail (x:xs) = xs
+myTail []       = []
+myTail (x : xs) = xs
 
 myFoldl :: (a -> b -> a) -> a -> [b] -> a
-myFoldl f init [] = init
-myFoldl f init (x:xs) = myFoldl f newlInit xs
-  where newlInit = f init x
+myFoldl f init []       = init
+myFoldl f init (x : xs) = myFoldl f newlInit xs where newlInit = f init x
 
 -- patientInfo :: String -> String -> Int -> Int -> String
 -- patientInfo fname lname age height = name ++ " " ++ ageHeight
@@ -43,12 +42,13 @@ lastName patient = snd patient
 
 patientInfo :: PatientName -> Age -> Height -> String
 patientInfo (fname, lname) age height = name ++ " " ++ ageHeight
-  where name = lname ++ ", " ++ fname
-        ageHeight = "(" ++ show age ++ ")" ++ "yrs. " ++ show height ++ "in.)"
+ where
+  name      = lname ++ ", " ++ fname
+  ageHeight = "(" ++ show age ++ ")" ++ "yrs. " ++ show height ++ "in.)"
 
 data Sex = Male | Female
 sexInitial :: Sex -> Char
-sexInitial Male = 'M'
+sexInitial Male   = 'M'
 sexInitial Female = 'F'
 
 data RhType = POS | Neg
@@ -69,26 +69,26 @@ showRh POS = "+"
 showRh Neg = "-"
 
 showABO :: ABOType -> String
-showABO A = "A"
-showABO B = "B"
+showABO A  = "A"
+showABO B  = "B"
 showABO AB = "AB"
-showABO O = "O"
+showABO O  = "O"
 
 showBloodType :: BloodType -> String
 showBloodType (BloodType abo rh) = showABO abo ++ showRh rh
 
 canDonateTo :: BloodType -> BloodType -> Bool
-canDonateTo (BloodType O _) _ = True
-canDonateTo _ (BloodType AB _) = True
-canDonateTo (BloodType A _) (BloodType A _) = True
-canDonateTo (BloodType B _) (BloodType B _) = True
-canDonateTo _ _ = False
+canDonateTo (BloodType O _) _                = True
+canDonateTo _               (BloodType AB _) = True
+canDonateTo (BloodType A _) (BloodType A  _) = True
+canDonateTo (BloodType B _) (BloodType B  _) = True
+canDonateTo _               _                = False
 
 type MiddleName = String
 data Name = Name FirstName LastName | NameWithMiddle FirstName MiddleName LastName
 
 showName :: Name -> String
-showName (Name f l) = f ++ " " ++ l
+showName (Name f l            ) = f ++ " " ++ l
 showName (NameWithMiddle f m l) = f ++ " " ++ m ++ " " ++ l
 
 name1 = Name "Jerome" "Salinger"
@@ -103,26 +103,92 @@ data Patient = Patient {name :: Name
 }
 
 jackieSmith :: Patient
-jackieSmith = Patient {name = Name "Jackie" "Smith"
-              , age = 43
-              , sex = Female
-              , height = 62
-              , weight = 115
-              , bloodType = BloodType O Neg
-}
+jackieSmith = Patient { name      = Name "Jackie" "Smith"
+                      , age       = 43
+                      , sex       = Female
+                      , height    = 62
+                      , weight    = 115
+                      , bloodType = BloodType O Neg
+                      }
 
 donorFor :: Patient -> Patient -> Bool
 donorFor p1 p2 = canDonateTo (bloodType p1) (bloodType p2)
 
 showSex :: Sex -> String
-showSex Male = "Male"
+showSex Male   = "Male"
 showSex Female = "Female"
 
 patientSummary :: Patient -> String
-patientSummary patient = "Patient Name: " ++ showName (name patient) ++ "\n"
-                      ++ "Sex: " ++ showSex (sex patient) ++ "\n" 
-                      ++ "Age: " ++ show (age patient) ++ "\n" 
-                      ++ "Height: " ++ show (height patient)++ "\n" 
-                      ++ "Weight: " ++ show (weight patient) ++ "\n" 
-                      ++ "Blood Type: " ++ showBloodType (bloodType patient) ++ "\n" 
+patientSummary patient =
+  "Patient Name: "
+    ++ showName (name patient)
+    ++ "\n"
+    ++ "Sex: "
+    ++ showSex (sex patient)
+    ++ "\n"
+    ++ "Age: "
+    ++ show (age patient)
+    ++ "\n"
+    ++ "Height: "
+    ++ show (height patient)
+    ++ "\n"
+    ++ "Weight: "
+    ++ show (weight patient)
+    ++ "\n"
+    ++ "Blood Type: "
+    ++ showBloodType (bloodType patient)
+    ++ "\n"
 
+inc :: Int -> Int
+inc x = x + 1
+
+cycleSucc :: (Bounded a, Enum a, Eq a, Num a) => a -> a
+cycleSucc n = if n == maxBound then minBound else succ n
+
+myRep :: (Bounded a, Bounded b) => a -> b -> a
+myRep x y = maxBound
+
+data NewEngland = ME | VT | NH | MA | RI | CT
+-- data SixSidedDie = S1 | S2 | S3 | S4 | S5 | S6 deriving (Eq, Ord)
+-- data SixSidedDie = S1 | S2 | S3 | S4 | S5 | S6 deriving(Show)
+data SixSidedDie = S1 | S2 | S3 | S4 | S5 | S6
+instance Show SixSidedDie where
+  show S1 = "one"
+  show S2 = "two"
+  show S3 = "three"
+  show S4 = "four"
+  show S5 = "five"
+  show S6 = "six"
+
+-- data TwoSidedDie = One | Two
+
+-- show :: TwoSidedDie -> String
+-- show One = "one"
+-- show Two = "two"
+-- instance Eq SixSidedDie where
+--   (==) S6 S6 = True
+--   (==) S5 S5 = True
+--   (==) S4 S4 = True
+--   (==) S3 S3 = True
+--   (==) S2 S2 = True
+--   (==) S1 S1 = True
+--   (==) _  _  = False
+
+data Test1 = AA | ZZ deriving (Eq, Ord)
+data Test2 = ZZZ | AAA deriving (Eq, Ord)
+
+instance Enum SixSidedDie where
+  toEnum 0 = S1
+  toEnum 1 = S2
+  toEnum 2 = S3
+  toEnum 3 = S4
+  toEnum 4 = S5
+  toEnum 5 = S6
+  toEnum _ = error " no such value"
+
+  fromEnum S1 = 0
+  fromEnum S2 = 1
+  fromEnum S3 = 2
+  fromEnum S4 = 3
+  fromEnum S5 = 4
+  fromEnum S6 = 5
