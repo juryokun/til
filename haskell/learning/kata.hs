@@ -378,3 +378,20 @@ instance Cipher OneTimePad where
 
 myOTP :: OneTimePad
 myOTP = OTP (cycle [minBound .. maxBound])
+
+-- puzzle
+changeDesimal' :: Int -> Int -> [Int]
+changeDesimal' 0 x = []
+changeDesimal' n x = remainder : changeDesimal' nextVal x
+ where
+  remainder = n `mod` x
+  nextVal   = n `div` x
+
+changeDesimal :: Int -> Int -> Int
+changeDesimal n x = read (intListToString changedDesimal)
+  where changedDesimal = reverse (changeDesimal' n x)
+
+intListToString :: [Int] -> String
+intListToString []       = ""
+intListToString (x : xs) = show x ++ intListToString xs
+
