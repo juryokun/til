@@ -387,11 +387,24 @@ changeDesimal' n x = remainder : changeDesimal' nextVal x
   remainder = n `mod` x
   nextVal   = n `div` x
 
-changeDesimal :: Int -> Int -> Int
-changeDesimal n x = read (intListToString changedDesimal)
-  where changedDesimal = reverse (changeDesimal' n x)
+changeDesimal :: Int -> Int -> [Int]
+changeDesimal n x = reverse (changeDesimal' n x)
 
 intListToString :: [Int] -> String
 intListToString []       = ""
 intListToString (x : xs) = show x ++ intListToString xs
 
+checkReversible :: [Int] -> Bool
+checkReversible list = reverseHalfList == halfList
+ where
+  halfPoint       = (\x -> if even x then x else x + 1) ((length list) `div` 2)
+  reverseHalfList = take halfPoint (reverse list)
+  halfList        = take halfPoint list
+
+puzzle1 x y z n = if xDesimal && yDesimal && zDesimal
+  then n
+  else puzzle1 x y z (n + 1)
+ where
+  xDesimal = checkReversible (changeDesimal n x)
+  yDesimal = checkReversible (changeDesimal n y)
+  zDesimal = checkReversible (changeDesimal n z)
