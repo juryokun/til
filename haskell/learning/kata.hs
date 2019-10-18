@@ -1,6 +1,7 @@
 import           Data.List
 import           Data.Semigroup
-import           qualified Data.Map as Map
+import           Data.Maybe
+import qualified Data.Map                      as Map
 
 aPet :: [String]
 aPet = ["cat", "dog"]
@@ -525,7 +526,7 @@ third :: Triple a -> a
 third (Triple _ _ x) = x
 
 toList :: Triple a -> [a]
-toList (Triple x y z) = [x,y,z]
+toList (Triple x y z) = [x, y, z]
 
 transform :: (a -> a) -> Triple a -> Triple a
 transform f (Triple x y z) = Triple (f x) (f y) (f z)
@@ -533,19 +534,19 @@ transform f (Triple x y z) = Triple (f x) (f y) (f z)
 data List a = Empty | Cons a (List a) deriving Show
 
 builtinEx1 :: [Int]
-builtinEx1 = 1:2:3:[]
+builtinEx1 = 1 : 2 : 3 : []
 
 ourListEx1 :: List Int
 ourListEx1 = Cons 1 (Cons 2 (Cons 3 Empty))
 
 builtinEx2 :: [Char]
-builtinEx2 = 'c':'a':'t':[]
+builtinEx2 = 'c' : 'a' : 't' : []
 
 ourListEx2 :: List Char
 ourListEx2 = Cons 'c' (Cons 'a' (Cons 't' Empty))
 
-ourMap :: (a->b) -> List a -> List b
-ourMap _ Empty = Empty
+ourMap :: (a -> b) -> List a -> List b
+ourMap _    Empty         = Empty
 ourMap func (Cons a rest) = Cons (func a) (ourMap func rest)
 
 itemCount1 :: (String, Int)
@@ -560,23 +561,23 @@ itemCount3 = ("Pens", 13)
 itemInventory :: [(String, Int)]
 itemInventory = [itemCount1, itemCount2, itemCount3]
 
-data Organ = Heart | Brain | Kindney | Spleen deriving (Show, Eq)
+data Organ = Heart | Brain | Kidney | Spleen deriving (Show, Eq)
 
 organs :: [Organ]
-organs = [Heart, Heart, Brain, Spleen, Spleen, Kindney]
+organs = [Heart, Heart, Brain, Spleen, Spleen, Kidney]
 
 ids :: [Int]
-ids = [2,7,13,14,21,24]
+ids = [2, 7, 13, 14, 21, 24]
 
 -- pairs = [(2, Heart),(7,Heart),(13,Brain)..]
-organPairs :: [(Int,Organ)]
+organPairs :: [(Int, Organ)]
 organPairs = zip ids organs
 
 organCatalog :: Map.Map Int Organ
 organCatalog = Map.fromList organPairs
 
 possibleDrawers :: [Int]
-possibleDrawers = [1..50]
+possibleDrawers = [1 .. 50]
 
 getDrawerContents :: [Int] -> Map.Map Int Organ -> [Maybe Organ]
 getDrawerContents ids catalog = map getContents ids
@@ -587,3 +588,134 @@ availableOrgans = getDrawerContents possibleDrawers organCatalog
 
 countOrgan :: Organ -> [Maybe Organ] -> Int
 countOrgan organ available = length (filter (\x -> x == Just organ) available)
+
+isSomething :: Maybe Organ -> Bool
+isSomething Nothing  = False
+isSomething (Just _) = True
+
+justTheOrgans :: [Maybe Organ]
+justTheOrgans = filter isSomething availableOrgans
+
+showOrgan :: Maybe Organ -> String
+showOrgan (Just organ) = show organ
+showOrgan Nothing      = ""
+
+organList :: [String]
+organList = map showOrgan justTheOrgans
+
+cleanList :: String
+cleanList = intercalate "," organList
+
+data Container = Vat Organ | Cooler Organ | Bag Organ
+
+instance Show Container where
+  show (Vat    organ) = show organ ++ " in a vat"
+  show (Cooler organ) = show organ ++ " in a cooler"
+  show (Bag    organ) = show organ ++ " in a bag"
+
+data Location = Lab | Kitchen | Bathroom deriving Show
+
+organToContainer :: Organ -> Container
+organToContainer Brain = Vat Brain
+organToContainer Heart = Cooler Heart
+organToContainer organ = Bag organ
+
+placeInLocation :: Container -> (Location, Container)
+placeInLocation (Vat    a) = (Lab, Vat a)
+placeInLocation (Cooler a) = (Lab, Cooler a)
+placeInLocation (Bag    a) = (Kitchen, Bag a)
+
+process :: Organ -> (Location, Container)
+process organ = placeInLocation (organToContainer organ)
+
+report :: (Location, Container) -> String
+report (location, container) = show container ++ " in the " ++ show location
+
+-- report :: Maybe (Location, Container) -> String
+-- report Nothing = "container not found"
+-- report (Just (location, container)) = show container ++ " in the " ++ show location
+-- processRequest :: Int -> Map.Map Int Organ -> String
+-- processRequest id catalog = report (process organ)
+--   where organ = Map.lookup id catalog
+
+processAndReport :: (Maybe Organ -> String)
+processAndReport (Just organ) = report (process organ)
+processAndReport Nothing      = "eroor, id not found"
+
+processResult :: Int -> Map.Map Int Organ -> String
+processResult id catalog = processAndReport organ
+  where organ = Map.lookup id catalog
+
+file1 :: [(Int, Double)]
+file1 =
+  [ (1 , 200.1)
+  , (2 , 199.5)
+  , (3 , 199.4)
+  , (4 , 198.9)
+  , (5 , 199.0)
+  , (6 , 200.2)
+  , (9 , 200.3)
+  , (10, 201.2)
+  , (12, 202.9)
+  ]
+
+file2 :: [(Int, Double)]
+file2 =
+  [ (11, 201.6)
+  , (12, 201.5)
+  , (13, 201.5)
+  , (14, 203.5)
+  , (17, 210.5)
+  , (18, 210.5)
+  , (20, 208.8)
+  ]
+
+file3 :: [(Int, Double)]
+file3 =
+  [ (10, 201.2)
+  , (11, 201.6)
+  , (12, 201.5)
+  , (13, 201.5)
+  , (14, 203.5)
+  , (17, 210.5)
+  , (24, 215.1)
+  , (25, 218.7)
+  ]
+
+file4 :: [(Int, Double)]
+file4 =
+  [ (26, 219.8)
+  , (27, 220.5)
+  , (28, 223.8)
+  , (29, 222.8)
+  , (30, 223.8)
+  , (31, 221.7)
+  , (32, 222.3)
+  , (34, 219.4)
+  , (35, 220.1)
+  , (35, 220.6)
+  ]
+
+data TS a = TS [Int] [Maybe a]
+
+createTS :: [Int] -> [a] -> TS a
+createTS times values = TS completeTimes extendedValues
+ where
+  completeTimes  = [minimum times .. maximum times]
+  timeValueMap   = Map.fromList (zip times values)
+  extendedValues = map (\v -> Map.lookup v timeValueMap) completeTimes
+
+fileToTS :: [(Int, a)] -> TS a
+fileToTS tvPairs = createTS times values
+ where
+  splitPairs = (unzip tvPairs)
+  times      = fst splitPairs
+  values     = snd splitPairs
+
+showTVPair :: Show a => Int -> (Maybe a) -> String
+showTVPair time (Just value) = mconcat [show time, "|", show value, "\n"]
+showTVPair time Nothing      = mconcat [show time, "|NA\n"]
+
+instance Show a => Show (TS a) where
+  show (TS times values) = mconcat rows
+    where rows = zipWith showTVPair times values
