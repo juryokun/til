@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 import qualified Data.Text                     as T
+import           Data.Semigroup
 
 -- helloPerson :: String -> String
 -- helloPerson name = "Hello" ++ " " ++ name ++ "!"
@@ -25,3 +26,18 @@ myWord = "dog"
 
 myNum1 :: Int
 myNum1 = 5
+
+sampleInput :: T.Text
+sampleInput = "this\nis\ninput"
+
+combinedTextMonoid :: T.Text
+combinedTextMonoid = mconcat ["some", " ", "text"]
+
+combinedTextSemigroup :: T.Text
+combinedTextSemigroup = "some" <> " " <> "text"
+
+myLines :: T.Text -> [T.Text]
+myLines text = T.splitOn "\n" text
+
+myUnlines :: [T.Text] -> T.Text
+myUnlines textLines = T.intercalate "\n" textLines
