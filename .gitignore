@@ -333,3 +333,6 @@ ASALocalRun/
 .stack-work/
 *~
 sample.mrc
+.DS_Store
+
+.devcontainer/
