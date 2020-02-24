@@ -147,4 +147,27 @@ mod tests {
         let mut x = vec![10, 30, 11]; // x.len()が2のべき乗になってない
         assert!(sort(&mut x, &Ascending).is_err()); // 戻り値はErr
     }
+
+    // 構造体Studentを定義する
+    // 構造体は関連する値を1つにまとめたデータ構造。複数のデータフィールドを持つ
+    struct Student {
+        first_name: String,     // first_name（名前）フィールド。String型
+        last_name: String,      // last_name（苗字）フィールド。String型
+        age: u8,                // age（年齢）フィールド。u8型（8ビット符号なし整数）
+    }
+
+    // implブロックを使うと対象の方に関連の関数やメソッドを実装できる。
+    impl Student {`
+        // 関連関数newを実装する
+        fn new(first_name: &str, last_name: &str, age: u8) -> Self {
+            // 構造体Studentを初期化して返す。Selfはimpl対象の型（Student)の別名
+            Self {
+                // to_stringメソッドで&str型の引数からString型の値を作る。
+                first_name: first_name.to_string(),  // first_nameフィールドに値を設定
+                last_name: last_name.to_string(),    // last_nameフィールドに値を設定
+                age,                                 // ageフィールドにage変数の値を設定
+                                                     // フィールドと変数が同じ名前のときは、このように省略形で書ける
+            }
+        }
+    }
 }
