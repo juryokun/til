@@ -6,6 +6,7 @@
 //  [u32]型は32のスライス
 
 use super::SortOrder;
+use std::cmp::Ordering;
 
 pub fn sort<T: Ord>(x: &mut [T], order: &SortOrder) -> Result<(), String> {
     if x.len().is_power_of_two() {
@@ -48,6 +49,17 @@ fn compare_and_swap<T: Ord>(x: &mut [T], up: bool) {
             // 要素を交換する
             x.swap(i, mid_point + i)
         }
+    }
+}
+
+pub fn sort_by<T, F>(x: &mut [T], comparator: &F) -> Result<(), String>
+    where F: Fn(&T, &T) -> Ordering
+{
+    if is_power_of_two(x.len()) {
+        do_sort(x, true, comparator);
+        Ok(())
+    } else {
+        Err(format!("The length of x is not a power of two. (x.len(): {}", x.len()))
     }
 }
 
@@ -169,5 +181,53 @@ mod tests {
                                                      // フィールドと変数が同じ名前のときは、このように省略形で書ける
             }
         }
+    }
+    use super::{is_power_of_two, sort, sort_by};  // 変更
+    use crate::SortOrder::*;
+
+    #{test}
+    // 年齢で昇順にソートする
+    fn sort_students_by_age_ascending() {
+        // 4人分のテストデータを作成
+        let taro = Student::new("Taro", "Yamada", 16);
+        let hanako = Student::new("Hanako", "Yamada", 14);
+        let kyoko = Student::new("Kyoko", "Ito", 15);
+        let ryosuke = Student::new("Ryosuke", "Hayashi", 17);
+
+        // ソート対象のベクタを作成する
+        let mut x = vec![&taro, &hanako, &kyoko, &ryosuke];
+
+        // ソート後の期待値を作成する
+        let expected = vec![&hanako, &kyoko, &taro, &ryosuke];
+
+        assert_eq!(
+            // sort_by関数でソートする。第2引数はソート順を決めるクロージャ
+            // 引数に2つのStudent構造体をとり、ageフィールドの値をcmpメソッドでひかくすることで大小を決定する。
+            sort_by(&mut x, &|a, b| a.age.cmp(&b.age)),
+            Ok(())
+        );
+
+        // 結果を検証する。
+        assert_eq!(x, expected);
+    }
+
+    #{test}
+    fn sort_students_by_name_ascending() {
+        let taro = Student::new("Taro", "Yamada", 16);
+        let hanako = Student::new("Hanako", "Yamada", 14);
+        let kyoko = Student::new("Kyoko", "Ito", 15);
+        let ryosuke = Student::new("Ryosuke", "Hayashi", 17);
+
+        let mut x = vec![&taro, &hanako, &kyoko, &ryosuke];
+        let expected = vec![&ryosuke, &kyoko, &hanako, &taro];
+
+        assert_eq!(sort_by(&mut x,
+            // まずlast_nameを比較する。
+            &|a, b| a.last_name.cmp(&b.last_name)
+                // もしlast_nameが等しくない（lessまたはGreater）ならそれを返す
+                // last_nameが等しい（Equal）ならfirst_nameを比較する
+                .then_with(|| a.first_name.cmp(&b.first_name))), Ok(())
+        );
+        assert_eq!(x, expected);
     }
 }
