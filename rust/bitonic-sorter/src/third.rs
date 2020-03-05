@@ -9,57 +9,78 @@ use super::SortOrder;
 use std::cmp::Ordering;
 
 pub fn sort<T: Ord>(x: &mut [T], order: &SortOrder) -> Result<(), String> {
-    if x.len().is_power_of_two() {
-        match *order {
-            SortOrder::Ascending => do_sort(x, true),
-            SortOrder::Descending => do_sort(x, false),
-        };
-        Ok(())
-    } else {
-        Err(format!(
-            "The length of x is not a power of two. (x.len():{})",
-            x.len()
-        ))
+    // do_sortを呼ぶ代わりに、sort_byを呼ぶようにする
+    // is_power_of_twoはsort_byが呼ぶので、ここから削除した
+    match *order {
+        // 昇順ならa.cmp(b)、降順ならb.cmp(a)を行う
+        SortOrder::Ascending => sort_by(x, &|a, b| a.cmp(b)),
+        SortOrder::Descending => sort_by(x, &|a, b| b.cmp(a)),
     }
 }
 
 // Rust版sort関数
-fn do_sort<T: Ord>(x: &mut [T], up: bool) {
+fn do_sort<T, F>(x: &mut [T], forward: bool, comparator: &F)
+where
+    F: Fn(&T, &T) -> Ordering,
+{
     if x.len() > 1 {
         let mid_point = x.len() / 2;
-        do_sort(&mut x[..mid_point], true);
-        do_sort(&mut x[mid_point..], false);
-        sub_sort(x, up);
+
+        // xをバイトニックにソートする
+        // 第2引数がtrueのときはcomparatorで示される順序でソート
+        do_sort(&mut x[..mid_point], true, comparator);
+        // 第2引数がfalseのときはcomparatorとは逆順でソート
+        do_sort(&mut x[mid_point..], false, comparator);
+
+        sub_sort(x, forward, comparator);
     }
 }
 // Rust版sub_sort関数
-fn sub_sort<T: Ord>(x: &mut [T], up: bool) {
+fn sub_sort<T, F>(x: &mut [T], forward: bool, comparator: &F)
+where
+    F: Fn(&T, &T) -> Ordering,
+{
     if x.len() > 1 {
-        compare_and_swap(x, up);
+        compare_and_swap(x, forward, comparator);
         let mid_point = x.len() / 2;
-        sub_sort(&mut x[..mid_point], up);
-        sub_sort(&mut x[mid_point..], up);
+        sub_sort(&mut x[..mid_point], forward, comparator);
+        sub_sort(&mut x[mid_point..], forward, comparator);
     }
 }
 // Rust版compare_and_swap関数
-fn compare_and_swap<T: Ord>(x: &mut [T], up: bool) {
+fn compare_and_swap<T, F>(x: &mut [T], forward: bool, comparator: &F)
+where
+    F: Fn(&T, &T) -> Ordering,
+{
+    // 比較に先立ちforward（bool値）をOrdering値に変換しておく
+    let swap_condition = if forward {
+        Ordering::Greater
+    } else {
+        Ordering::Less
+    };
+
     let mid_point = x.len() / 2;
     for i in 0..mid_point {
-        if (x[i] > x[mid_point + i]) == up {
-            // 要素を交換する
-            x.swap(i, mid_point + i)
+        // vompstsyotクロージャで2要素を比較し、返されたOreringバリアントが
+        // swap_conditionと等しいなら要素を交換する
+        if comparator(&x[i], &x[mid_point + 1]) == swap_condition {
+            x.swap(i, mid_point + i);
         }
     }
 }
 
 pub fn sort_by<T, F>(x: &mut [T], comparator: &F) -> Result<(), String>
-    where F: Fn(&T, &T) -> Ordering
+where
+    F: Fn(&T, &T) -> Ordering,
 {
-    if is_power_of_two(x.len()) {
+    if x.len().is_power_of_two() {
         do_sort(x, true, comparator);
         Ok(())
     } else {
-        Err(format!("The length of x is not a power of two. (x.len(): {}", x.len()))
+        Err(format!(
+            "The length of x is not a power of two. (x.len(): {}",
+            x.len()
+        ))
     }
 }
 
@@ -67,8 +88,33 @@ pub fn sort_by<T, F>(x: &mut [T], comparator: &F) -> Result<(), String>
 #[cfg(test)]
 mod tests {
     // 親モジュール（second）のsort関数を使用する
-    use super::sort;
+    use super::{sort, sort_by}; // 変更
     use crate::SortOrder::*;
+
+    // 構造体Studentを定義する
+    // 構造体は関連する値を1つにまとめたデータ構造。複数のデータフィールドを持つ
+    // deriveアトリビュートを使い、DebugトレイととPartialEqトレイとの実装を自動導出する。
+    #[derive(Debug, PartialEq)]
+    struct Student {
+        first_name: String, // first_name（名前）フィールド。String型
+        last_name: String,  // last_name（苗字）フィールド。String型
+        age: u8,            // age（年齢）フィールド。u8型（8ビット符号なし整数）
+    }
+
+    // implブロックを使うと対象の方に関連の関数やメソッドを実装できる。
+    impl Student {
+        // 関連関数newを実装する
+        fn new(first_name: &str, last_name: &str, age: u8) -> Self {
+            // 構造体Studentを初期化して返す。Selfはimpl対象の型（Student)の別名
+            Self {
+                // to_stringメソッドで&str型の引数からString型の値を作る。
+                first_name: first_name.to_string(), // first_nameフィールドに値を設定
+                last_name: last_name.to_string(),   // last_nameフィールドに値を設定
+                age,                                // ageフィールドにage変数の値を設定
+                                                    // フィールドと変数が同じ名前のときは、このように省略形で書ける
+            }
+        }
+    }
 
     // #[test]の付いた関数はcargo testとしたときに実行される
     #[test]
@@ -160,32 +206,7 @@ mod tests {
         assert!(sort(&mut x, &Ascending).is_err()); // 戻り値はErr
     }
 
-    // 構造体Studentを定義する
-    // 構造体は関連する値を1つにまとめたデータ構造。複数のデータフィールドを持つ
-    struct Student {
-        first_name: String,     // first_name（名前）フィールド。String型
-        last_name: String,      // last_name（苗字）フィールド。String型
-        age: u8,                // age（年齢）フィールド。u8型（8ビット符号なし整数）
-    }
-
-    // implブロックを使うと対象の方に関連の関数やメソッドを実装できる。
-    impl Student {`
-        // 関連関数newを実装する
-        fn new(first_name: &str, last_name: &str, age: u8) -> Self {
-            // 構造体Studentを初期化して返す。Selfはimpl対象の型（Student)の別名
-            Self {
-                // to_stringメソッドで&str型の引数からString型の値を作る。
-                first_name: first_name.to_string(),  // first_nameフィールドに値を設定
-                last_name: last_name.to_string(),    // last_nameフィールドに値を設定
-                age,                                 // ageフィールドにage変数の値を設定
-                                                     // フィールドと変数が同じ名前のときは、このように省略形で書ける
-            }
-        }
-    }
-    use super::{is_power_of_two, sort, sort_by};  // 変更
-    use crate::SortOrder::*;
-
-    #{test}
+    #[test]
     // 年齢で昇順にソートする
     fn sort_students_by_age_ascending() {
         // 4人分のテストデータを作成
@@ -211,7 +232,7 @@ mod tests {
         assert_eq!(x, expected);
     }
 
-    #{test}
+    #[test]
     fn sort_students_by_name_ascending() {
         let taro = Student::new("Taro", "Yamada", 16);
         let hanako = Student::new("Hanako", "Yamada", 14);
@@ -221,12 +242,18 @@ mod tests {
         let mut x = vec![&taro, &hanako, &kyoko, &ryosuke];
         let expected = vec![&ryosuke, &kyoko, &hanako, &taro];
 
-        assert_eq!(sort_by(&mut x,
-            // まずlast_nameを比較する。
-            &|a, b| a.last_name.cmp(&b.last_name)
-                // もしlast_nameが等しくない（lessまたはGreater）ならそれを返す
-                // last_nameが等しい（Equal）ならfirst_nameを比較する
-                .then_with(|| a.first_name.cmp(&b.first_name))), Ok(())
+        assert_eq!(
+            sort_by(
+                &mut x,
+                // まずlast_nameを比較する。
+                &|a, b| a
+                    .last_name
+                    .cmp(&b.last_name)
+                    // もしlast_nameが等しくない（lessまたはGreater）ならそれを返す
+                    // last_nameが等しい（Equal）ならfirst_nameを比較する
+                    .then_with(|| a.first_name.cmp(&b.first_name))
+            ),
+            Ok(())
         );
         assert_eq!(x, expected);
     }
