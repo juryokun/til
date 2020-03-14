@@ -1,8 +1,27 @@
-fn hello() {
-    println!("Hello");
+fn print_info(name: &str, s1: &[char]) {
+    println!(
+        "  {:9} - {}, {:?}, {:?}, {:?}",
+        name,
+        s1.len(),
+        s1.first(),
+        s1[1],
+        s1.last()
+    );
 }
-
 fn main() {
-    // let ret = hello();
-    assert_eq!(std::mem::size_of::<()>(), 0);
+    let a1 = ["a", "b", "c", "d"];
+    // println!("a1: {:?}", a1);
+    // print_info("&a1[..]", &a1[..]);
+    // print_info("&a1", &a1);
+    // print_info("&a1[1..3]", &a1[1..3]);
+
+    let v1 = vec!['e', 'f', 'g', 'h'];
+    println!("\nv1: {:?}", v1);
+    print_info("&v1[..]", &v1[..]);
+    print_info("&v1", &v1);
+    print_info("&v1[1..3]", &v1[1..3]);
+
+    let s2 = &a1[0..3];
+    assert_eq!(s2.first(), Some(&"a"));
+    assert_eq!(s2.first(), Some(&"a"));
 }
