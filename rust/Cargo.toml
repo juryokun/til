@@ -10,3 +10,15 @@ path = "main.rs"
 [[bin]]
 name = "ch04"
 path = "ex04/examples/ch04_01_unit.rs"
+
+[[bin]]
+name = "ch05_result"
+path = "ex05/ch05_11_results.rs"
+
+[[bin]]
+name = "ch05_type"
+path = "ex05/ch05_12_type_alias.rs"
+
+[[bin]]
+name = "ch05_struct1"
+path = "ex05/ch05_13_struct1.rs"
