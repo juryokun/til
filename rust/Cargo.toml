@@ -22,3 +22,15 @@ path = "ex05/ch05_12_type_alias.rs"
 [[bin]]
 name = "ch05_struct1"
 path = "ex05/ch05_13_struct1.rs"
+
+[[bin]]
+name = "ch05_struct2"
+path = "ex05/ch05_14_struct2.rs"
+
+[[bin]]
+name = "ch05_enum1"
+path = "ex05/ch05_18_enum1.rs"
+
+[[bin]]
+name = "ch05_adv"
+path = "ex05/ch05_20_adv_types1.rs"

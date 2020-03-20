@@ -5,20 +5,21 @@ struct Polygon {
     fill: (u8, u8, u8),
 }
 
-impl Default for Polygon {
-    fn default() -> Self {
-        Self {
-            stroke_width: 1,
-            vertexes: Default::default(),
-            fill: Default::default(),
-        }
-    }
-}
+// impl Default for Polygon {
+//     fn default() -> Self {
+//         Self {
+//             stroke_width: 1,
+//             vertexes: Default::default(),
+//             fill: Default::default(),
+//         }
+//     }
+// }
 fn main() {
     let polygon1: Polygon = Default::default();
 
-    let polygon2: = Polygon {
+    let polygon2 = Polygon {
         vertexes: vec![(0, 0), (3, 0), (2, 2)],
-        .. Default::default()
+        ..Default::default()
     };
+    println!("{}", polygon2.vertexes[0].0)
 }
