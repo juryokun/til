@@ -336,3 +336,5 @@ sample.mrc
 .DS_Store
 
 .devcontainer/
+
+*.code-workspace
