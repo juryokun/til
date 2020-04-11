@@ -15,3 +15,7 @@ path = "example/toy_vec_01.rs"
 [[bin]]
 name = "ch05_rc"
 path = "example/ch05_rc.rs"
+
+[[bin]]
+name = "closure"
+path = "example/ch07_closure.rs"
