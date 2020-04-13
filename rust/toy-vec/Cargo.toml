@@ -19,3 +19,7 @@ path = "example/ch05_rc.rs"
 [[bin]]
 name = "closure"
 path = "example/ch07_closure.rs"
+
+[[bin]]
+name = "traitbasic"
+path = "example/trait_basics.rs"

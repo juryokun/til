@@ -34,3 +34,7 @@ path = "ex05/ch05_18_enum1.rs"
 [[bin]]
 name = "ch05_adv"
 path = "ex05/ch05_20_adv_types1.rs"
+
+[[bin]]
+name = "guessnum"
+path = "thebook/guess_number.rs"
