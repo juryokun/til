@@ -109,6 +109,19 @@ fn lex(input: &str) -> Result<Vec<Token>, LexError> {
     Ok(tokens)
 }
 
+fn comsume_byte(input: &[u8], pos: usize, b: u8) -> Result<(u8, usize), LexError> {
+    if input.len() <= pos {
+        return Err(LexError::eof(Loc(pos, pos)));
+    }
+    if input[pos] != b {
+        return Err(LexError::invalid_char(
+            input[pos] as char,
+            Loc(pos, pos + 1),
+        ));
+    }
+    Ok((b, pos + 1))
+}
+
 fn main() {
     println!("Hello, world!");
 }
