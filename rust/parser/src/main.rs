@@ -109,7 +109,7 @@ fn lex(input: &str) -> Result<Vec<Token>, LexError> {
     Ok(tokens)
 }
 
-fn comsume_byte(input: &[u8], pos: usize, b: u8) -> Result<(u8, usize), LexError> {
+fn consume_byte(input: &[u8], pos: usize, b: u8) -> Result<(u8, usize), LexError> {
     if input.len() <= pos {
         return Err(LexError::eof(Loc(pos, pos)));
     }
@@ -120,6 +120,25 @@ fn comsume_byte(input: &[u8], pos: usize, b: u8) -> Result<(u8, usize), LexError
         ));
     }
     Ok((b, pos + 1))
+}
+
+fn lex_plus(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
+    consume_byte(input, start, b'+').map(|(_, end)| (Token::plus(Loc(start, end)), end))
+}
+fn lex_minus(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
+    consume_byte(input, start, b'-').map(|(_, end)| (Token::minus(Loc(start, end)), end))
+}
+fn lex_asterisk(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
+    consume_byte(input, start, b'*').map(|(_, end)| (Token::asterisk(Loc(start, end)), end))
+}
+fn lex_slash(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
+    consume_byte(input, start, b'/').map(|(_, end)| (Token::slash(Loc(start, end)), end))
+}
+fn lex_lparen(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
+    consume_byte(input, start, b'(').map(|(_, end)| (Token::lparen(Loc(start, end)), end))
+}
+fn lex_rparen(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
+    consume_byte(input, start, b')').map(|(_, end)| (Token::rparen(Loc(start, end)), end))
 }
 
 fn main() {
