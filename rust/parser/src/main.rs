@@ -141,6 +141,28 @@ fn lex_rparen(input: &[u8], start: usize) -> Result<(Token, usize), LexError> {
     consume_byte(input, start, b')').map(|(_, end)| (Token::rparen(Loc(start, end)), end))
 }
 
+fn lex_number(input: &[u8], mut pos: usize) -> Result<(Token, usize), LexError> {
+    use std::str::from_utf8;
+
+    let start = pos;
+    let end = recognize_many(input, start, |b| b"1234567890".contains(&b));
+    let n = from_utf8(&input[start..end]).unwrap().parse().unwrap();
+
+    Ok((Token::number(n, Loc(start, end)), end))
+}
+
+fn skip_spaces(input: &[u8], mut pos: usize) -> Result<((), usize), LexError> {
+    let pos = recognize_many(input, pos, |b| b" \n\t".contains(&b));
+    Ok(((), pos))
+}
+
+fn recognize_many(input: &[u8], mut pos: usize, mut f: impl FnMut(u8) -> bool) -> usize {
+    while pos < input.len() && f(input[pos]) {
+        pos += 1;
+    }
+    pos
+}
+
 fn main() {
     println!("Hello, world!");
 }
