@@ -185,7 +185,7 @@ impl Ast {
         Self::new(AstKind::Num(n), loc)
     }
     fn uniop(op: UniOp, e: Ast, loc: Loc) -> Self {
-        Self::new(AstKind::UniOp { op, e: Box::new(e) }, e)
+        Self::new(AstKind::UniOp { op, e: Box::new(e) }, loc)
     }
     fn binop(op: BinOp, l: Ast, r: Ast, loc: Loc) -> Self {
         Self::new(
@@ -208,7 +208,7 @@ impl UniOp {
     fn plus(loc: Loc) -> Self {
         Self::new(UniOpKind::Plus, loc)
     }
-    fn minux(loc: Loc) -> Self {
+    fn minus(loc: Loc) -> Self {
         Self::new(UniOpKind::Minus, loc)
     }
 }
@@ -265,7 +265,7 @@ fn parse_expr3<Tokens>(tokens: &mut Peekable<Tokens>) -> Result<Ast, ParseError>
 where
     Tokens: Iterator<Item = Token>,
 {
-    fn parse_expr3_op<Tokens>(tokens: &mut Peekable<Tokens>) -> Result<Binop, ParseError>
+    fn parse_expr3_op<Tokens>(tokens: &mut Peekable<Tokens>) -> Result<BinOp, ParseError>
     where
         Tokens: Iterator<Item = Token>,
     {
@@ -349,7 +349,7 @@ where
                 let e = parse_expr(tokens)?;
                 match tokens.next() {
                     Some(Token {
-                        value: TokenKind::Rparen,
+                        value: TokenKind::RParen,
                         ..
                     }) => Ok(e),
                     Some(t) => Err(ParseError::RedundantExpression(t)),
@@ -359,6 +359,8 @@ where
             _ => Err(ParseError::NotExpression(tok)),
         })
 }
+
+use std::iter::Peekable;
 
 fn parse_left_binop<Tokens>(
     tokens: &mut Peekable<Tokens>,
@@ -384,20 +386,6 @@ where
         }
     }
     Ok(e)
-}
-
-pub fn ok_or<E>(self, err: E) -> Result<T, E> {
-    match self {
-        Some(v) => Ok(v),
-        None => Err(err),
-    }
-}
-
-pub fn and_then<U, F: FnOnce(T) -> Result<U, E>>(self, op: F) -> Result<U, E> {
-    match self {
-        Ok(t) -> op(t),
-        Err(e) => Err(e),
-    }
 }
 
 fn main() {
@@ -434,4 +422,40 @@ fn test_lexer() {
             Token::number(10, Loc(13, 15)),
         ])
     );
+}
+#[test]
+fn test_parser() {
+    let ast = parse(vec![
+        Token::number(1, Loc(0, 1)),
+        Token::plus(Loc(2, 3)),
+        Token::number(2, Loc(4, 5)),
+        Token::asterisk(Loc(6, 7)),
+        Token::number(3, Loc(8, 9)),
+        Token::minus(Loc(10, 11)),
+        Token::minus(Loc(12, 13)),
+        Token::number(10, Loc(13, 15)),
+    ]);
+    assert_eq!(
+        ast,
+        Ok(Ast::binop(
+            BinOp::sub(Loc(10, 11)),
+            Ast::binop(
+                BinOp::add(Loc(2, 3)),
+                Ast::num(1, Loc(0, 1)),
+                Ast::binop(
+                    BinOp::new(BinOpKind::Mult, Loc(6, 7)),
+                    Ast::num(2, Loc(4, 5)),
+                    Ast::num(3, Loc(8, 9)),
+                    Loc(4, 9),
+                ),
+                Loc(0, 9),
+            ),
+            Ast::uniop(
+                UniOp::minus(Loc(12, 13)),
+                Ast::num(10, Loc(13, 15)),
+                Loc(12, 15),
+            ),
+            Loc(0, 15)
+        ))
+    )
 }
