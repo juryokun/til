@@ -1,0 +1,13 @@
+[package]
+name = "puzzle"
+version = "0.1.0"
+authors = ["juryokun <capeta.kozo@gmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "q01"
+path = "first/q01.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
