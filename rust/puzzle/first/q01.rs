@@ -25,6 +25,7 @@ fn main() {
 
 #[test]
 fn test_is_palindrome() {
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     struct data {
         value: String,
         expected: bool,
@@ -56,6 +57,11 @@ fn test_is_palindrome() {
         },
     ];
     for target in datas {
-        assert_eq!(is_palindrome(target.value), target.expected);
+        assert_eq!(
+            is_palindrome(target.value.clone()),
+            target.expected,
+            "{:?}",
+            target.value
+        );
     }
 }
