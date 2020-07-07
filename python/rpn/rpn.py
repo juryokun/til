@@ -1,38 +1,55 @@
 
 # -*- coding: utf-8 -*-
+import sys
 
+# TODO: python rpn.py "1 2 + 1"
 def rpn(input):
 
     operators = ["+", "-", "/", "*"]
     stack = []
 
-    for x in input.split(" "):
-        if x not in operators:
-            stack.append(x)
+    for z in input.split(" "):
+        if z not in operators:
+            try:
+                stack.append(int(z))
+            except ValueError as e:
+                raise ValueError("値が正しくありません")
             continue
-        stack.append(calcurate(stack, x))
+        stack.append(calcurate(stack, z))
+
     return stack.pop()
 
 def calcurate(stack, op):
-    y = int(stack.pop())
-    x = int(stack.pop())
+    try:
+        y = stack.pop()
+        x = stack.pop()
+    except IndexError as e:
+        raise IndexError("式が正しくありません")
 
-    if op == "+":
-        return x + y
-    elif op == "-":
-        return x - y
-    elif op == "/":
-        return float(x) / y
-    elif op == "*":
-        return x * y
+    try:
+        if op == "+":
+            return x + y
+        elif op == "-":
+            return x - y
+        elif op == "/":
+            return float(x) / y
+        elif op == "*":
+            return x * y
+    except ZeroDivisionError as e:
+        raise ZeroDivisionError("ゼロで割ることはできません")
 
 def test():
     result = rpn("12 2 5 * -")
     assert result == 2, 'False'
 
 if __name__ == '__main__':
-    import sys
-    print(rpn(sys.argv[1]))
-    test()
+    if len(sys.argv) == 2:
+        try:
+            print(rpn(sys.argv[1]))
+        except Exception as e:
+            print(e)
+        test()
+    else:
+        print("引数が正しくありません")
 
 
