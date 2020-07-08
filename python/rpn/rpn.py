@@ -8,7 +8,7 @@ def rpn(input):
     operators = ["+", "-", "/", "*"]
     stack = []
 
-    for z in input.split(" "):
+    for index, z in enumerate(input.split(" ")):
         if z not in operators:
             try:
                 stack.append(int(z))
@@ -17,6 +17,8 @@ def rpn(input):
             continue
         stack.append(calcurate(stack, z))
 
+    if len(stack) != 1:
+        raise Exception("式が正しくありません")
     return stack.pop()
 
 def calcurate(stack, op):
