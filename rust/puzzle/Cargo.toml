@@ -24,6 +24,9 @@ path = "first/q06.rs"
 name = "q07"
 path = "first/q07.rs"
 
+[[bin]]
+name = "q08"
+path = "first/q08.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
