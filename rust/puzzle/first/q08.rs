@@ -3,10 +3,8 @@ fn main() {
     println!("{}", cnt);
 }
 fn move_robot(loc: Loc, mut history: Vec<Loc>) -> usize {
-    for i in history.iter() {
-        if i == &loc {
-            return 0;
-        }
+    if history.iter().find(|&&x| x == loc) != None {
+        return 0;
     }
     history.push(loc);
     if history.len() == 13 {
