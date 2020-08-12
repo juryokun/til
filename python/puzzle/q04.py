@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-def main(poll, people_num):
+# 回答1: ループでやる
+def ans1(poll, people_num):
     target_list = []
     target_list.append(poll)
 
     cnt = 0
-    while len(filter(lambda x: x>1, target_list)) > 0:
+    # while len(list(filter(lambda x: x>1, target_list))) > 0:
+    while len([x for x in target_list if x>1]) > 0:
         stack = []
         for i in range(people_num):
             target = select_target(target_list)
@@ -28,17 +30,19 @@ def select_target(targets):
             return [j, target]
     return False
 
-def cut_poll(poll, num, split):
+
+# 回答2: 再帰でやる
+def ans2(poll, num, split):
     if split >= poll:
         return 0
     elif split < num:
-        return 1 + cut_poll(poll, num, split * 2)
+        return 1 + ans2(poll, num, split * 2)
     else:
-        return 1 + cut_poll(poll, num, split + num)
+        return 1 + ans2(poll, num, split + num)
 
 
 if __name__ == "__main__":
-    print(main(20, 3))
-    print(main(100, 5))
-    print(cut_poll(20, 3, 1))
-    print(cut_poll(100, 5, 1))
+    print(ans1(20, 3))
+    print(ans1(100, 5))
+    print(ans2(20, 3, 1))
+    print(ans2(100, 5, 1))
