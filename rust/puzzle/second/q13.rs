@@ -2,14 +2,13 @@ use eval::{eval, to_value};
 
 fn main() {
     let target = "read+write+talk=skill";
-    let vec: Vec<&str> = target.split("=").collect();
-    let left = vec[0];
-    let right = vec[1];
+    // 正規表現でアルファベットだけ抜き出す
 
-    // leftから文字列の重複削除、計算記号の削除
-    // let chars =
+    // アルファベットの重複削除
 
-    // 0-9を各文字に割当(置換)
+    // 各アルファベットに数値割当（頭0省く）
 
-    // evalで計算
+    // アルファベットと数値の対応関係をtargetに反映
+
+    // evalで計算しtrueになったらカウント
 }
