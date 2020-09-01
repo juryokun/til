@@ -1,5 +1,5 @@
 extern crate regex;
-use eval::{eval, to_value};
+use eval::eval;
 use regex::Regex;
 use std::collections::HashSet;
 
