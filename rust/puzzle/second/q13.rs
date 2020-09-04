@@ -4,6 +4,8 @@ use regex::Regex;
 use std::collections::HashSet;
 
 fn main() {
+    // let v = permutations(4, 4);
+    // println!("{:?}", v);
     let target = "READ+WRITE+TALK==SKILL";
     // 正規表現でアルファベットだけ抜き出す
     let re = Regex::new(r"(\+|=|-|/)").unwrap();
@@ -20,7 +22,7 @@ fn main() {
         .collect::<Vec<_>>();
 
     // 各アルファベットに数値割当（頭0省く）
-    let vecs = make_permutation(uniq.len());
+    let vecs = permutations(uniq.len() as i32, uniq.len() as i32);
 
     // アルファベットと数値の対応関係をtargetに反映
     let mut cnt = 0;
@@ -56,46 +58,22 @@ fn is_exist(heads: Vec<char>, c: &char) -> bool {
     }
     false
 }
-fn make_permutation(n: usize) -> Vec<Vec<usize>> {
-    let mut vecs: Vec<Vec<usize>> = vec![Vec::new(); factorial(n)];
-    let nums: Vec<usize> = (0..n).collect();
-    let indexes: Vec<usize> = (0..factorial(n)).collect();
-    push_recusive(nums, indexes, &mut vecs);
-    vecs
-}
 
-fn push_recusive<T: Clone>(
-    nums: Vec<T>,
-    indexes: Vec<usize>,
-    vecs: &mut Vec<Vec<T>>,
-) -> &mut Vec<Vec<T>> {
-    if nums.len() == 0 {
-        return vecs;
-    }
-    let block_size = factorial(nums.len() - 1);
-    for (block_index, num) in nums.iter().enumerate() {
-        for inner_index in 0..block_size {
-            let index = indexes[block_size * block_index + inner_index];
-            vecs[index].push(num.clone());
+fn permutations(n: i32, m: i32) -> Vec<Vec<i32>> {
+    fn perm(n: i32, m: i32, xs: &mut Vec<i32>, v: &mut Vec<Vec<i32>>) {
+        if m == 0 {
+            v.push(xs.clone());
+        } else {
+            for x in 0..n {
+                if !xs.contains(&x) {
+                    xs.push(x);
+                    perm(n, m - 1, xs, v);
+                    xs.pop();
+                }
+            }
         }
-        let new_nums = {
-            let mut tmp = nums.clone();
-            tmp.remove(block_index);
-            tmp
-        };
-        let new_indexes: Vec<usize> = {
-            let slice = &indexes[(block_size * block_index)..(block_size * (block_index + 1))];
-            slice.to_vec()
-        };
-        push_recusive(new_nums, new_indexes, vecs);
     }
-    vecs
-}
-
-fn factorial(i: usize) -> usize {
-    if i <= 1 {
-        1
-    } else {
-        (2..=i).fold(1, |acc, x| acc * x)
-    }
+    let mut v = vec![];
+    perm(n, m, &mut vec![], &mut v);
+    v
 }
