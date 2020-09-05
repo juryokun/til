@@ -32,7 +32,7 @@ fn main() {
         for (i, c) in uniq.iter().enumerate() {
             let num = &v[i].to_string();
             if num == &'0'.to_string() {
-                if is_exist(heads.clone(), c) {
+                if is_exist(&heads, c) {
                     break;
                 }
             }
@@ -50,7 +50,7 @@ fn main() {
     // 値を出力
     println!("{}", cnt);
 }
-fn is_exist(heads: Vec<char>, c: &char) -> bool {
+fn is_exist(heads: &Vec<char>, c: &char) -> bool {
     for i in heads.iter() {
         if i == c {
             return true;
@@ -76,4 +76,26 @@ fn permutations(n: i32, m: i32) -> Vec<Vec<i32>> {
     let mut v = vec![];
     perm(n, m, &mut vec![], &mut v);
     v
+}
+
+#[test]
+fn test_perm() {
+    let v = permutations(3, 3);
+    let assert_v = [
+        [0, 1, 2],
+        [0, 2, 1],
+        [1, 0, 2],
+        [1, 2, 0],
+        [2, 0, 1],
+        [2, 1, 0],
+    ];
+    assert_eq!(v, assert_v);
+}
+
+#[test]
+fn test_is_exist() {
+    let heads = vec!['H', 'I', 'B', 'P'];
+    assert_eq!(is_exist(&heads, &'B'), true);
+
+    assert_eq!(is_exist(&heads, &'A'), false);
 }
