@@ -4,8 +4,6 @@ use regex::Regex;
 use std::collections::HashSet;
 
 fn main() {
-    // let v = permutations(4, 4);
-    // println!("{:?}", v);
     let target = "READ+WRITE+TALK==SKILL";
     // 正規表現でアルファベットだけ抜き出す
     let re = Regex::new(r"(\+|=|-|/)").unwrap();
