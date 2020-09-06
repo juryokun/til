@@ -1,11 +1,39 @@
 fn main() {
     // データセット
-    let data = vec!["Brazil", "Croatia"];
-
-    // // 国名を大文字変換
-    // let upper_data = data
-    //     .iter()
-    //     .map(|st| st.chars().map(|c| c.to_ascii_uppercase()));
+    let data = vec![
+        "Brazil",
+        "Croatia",
+        "Mexico",
+        "Cameroon",
+        "Spain",
+        "Netherlands",
+        "Chile",
+        "Australia",
+        "Colombia",
+        "Greece",
+        "Cote d'lvoire",
+        "Japan",
+        "Uruguay",
+        "Costa Rica",
+        "England",
+        "Italy",
+        "Switzerland",
+        "Ecuador",
+        "France",
+        "Honduras",
+        "Argentina",
+        "Bosnia and Herzegovina",
+        "Iran",
+        "Nigeria",
+        "Germany",
+        "Portugal",
+        "Ghana",
+        "USA",
+        "Belgium",
+        "Algeria",
+        "Russia",
+        "Korea Republic",
+    ];
 
     // フラグ付与
     let mut target: Vec<Country> = vec![];
@@ -14,6 +42,8 @@ fn main() {
     }
 
     // しりとり開始
+    let rel = shiritori(' ', target, 0);
+    println!("{}", rel);
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -38,24 +68,48 @@ impl Country {
     fn is_used(&self) -> bool {
         self.is_used
     }
-    fn equal_end(&self, c: &char) -> bool {
-        &self.name.chars().last().unwrap() == c
+    fn equal_head(&self, c: &char) -> bool {
+        &self.name.chars().next().unwrap() == c
     }
 }
 
-// TODO: カウント方法修正
-fn shiritori(last_char: char, countries: Vec<Country>, mut cnt: i32) -> i32 {
-    let is_candidate = |country: &Country| country.equal_end(&last_char) && country.is_used();
+fn shiritori(last_char: char, countries: Vec<Country>, cnt: i32) -> i32 {
+    let mut max_cnt = cnt;
+    let is_candidate = |country: &Country| country.equal_head(&last_char) && !country.is_used();
     for (index, val) in countries.iter().enumerate() {
-        if is_candidate(val) {
+        if is_candidate(val) || last_char == ' ' {
             let mut new_countries = countries.clone();
             new_countries[index] = val.used();
-            cnt = shiritori(
+            let tmp_cnt = shiritori(
                 val.name.chars().last().unwrap(),
                 new_countries,
                 cnt.clone() + 1,
             );
+            if max_cnt < tmp_cnt {
+                max_cnt = tmp_cnt;
+            }
         }
     }
-    cnt
+    max_cnt
+}
+
+#[test]
+fn test_country_new() {
+    let check = Country {
+        name: "ABC".to_string(),
+        is_used: false,
+    };
+    assert_eq!(Country::new("Abc".to_string()), check);
+}
+#[test]
+fn test_shiritori() {
+    let data = vec!["Abc", "Bde", "Cab"];
+
+    let mut target: Vec<Country> = vec![];
+    for countory in data.iter() {
+        target.push(Country::new(countory.to_string()));
+    }
+
+    // しりとり開始
+    assert_eq!(shiritori(' ', target, 0), 3);
 }
