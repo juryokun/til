@@ -6,54 +6,6 @@ use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-// fn main() {
-//     let counter = Arc::new(Mutex::new(0));
-
-//     let c1 = Arc::clone(&counter);
-//     let handle1 = thread::spawn(move || {
-//         for _ in 0..10 {
-//             thread::sleep_ms(1000);
-//             let mut num = c1.lock().unwrap();
-//             *num += 1;
-//         }
-//     });
-//     let c2 = Arc::clone(&counter);
-//     let handle2 = thread::spawn(move || {
-//         for _ in 0..10 {
-//             thread::sleep_ms(1000);
-//             let mut num = c2.lock().unwrap();
-//             *num += 1;
-//         }
-//     });
-//     let c3 = Arc::clone(&counter);
-//     let handle3 = thread::spawn(move || {
-//         for _ in 0..10 {
-//             thread::sleep_ms(1000);
-//             let mut num = c3.lock().unwrap();
-//             *num += 1;
-//         }
-//     });
-//     handle1.join().unwrap();
-//     handle2.join().unwrap();
-//     handle3.join().unwrap();
-// let mut handles = vec![];
-
-// for _ in 0..10 {
-//     let counter = Arc::clone(&counter);
-//     let handle = thread::spawn(move || {
-//         let mut num = counter.lock().unwrap();
-
-//         *num += 1;
-//     });
-//     handles.push(handle);
-// }
-
-// for handle in handles {
-//     handle.join().unwrap();
-// }
-
-// println!("Result: {}", *counter.lock().unwrap());
-// }
 fn main() {
     let target = "READ+WRITE+TALK==SKILL";
     // 正規表現でアルファベットだけ抜き出す
@@ -72,14 +24,15 @@ fn main() {
 
     // 各アルファベットに数値割当（頭0省く）
     let mut vecs = permutations(uniq.len() as i32, uniq.len() as i32);
-    // let middle = ((vecs.len() / 2) as f64).ceil() as usize;
-    let vecs_a = vecs.split_off(2);
+
+    let vecs_a = vecs.split_off(vecs.len() / 2);
 
     // アルファベットと数値の対応関係をtargetに反映
     let counter = Arc::new(Mutex::new(0));
     let uniq_a = Arc::new(uniq);
     let heads_a = Arc::new(heads);
 
+    // 並列処理1
     let cnt1 = Arc::clone(&counter);
     let uniq1 = Arc::clone(&uniq_a);
     let heads1 = Arc::clone(&heads_a);
@@ -87,6 +40,7 @@ fn main() {
         count_equal(vecs, target.to_string(), uniq1, heads1, cnt1);
     });
 
+    // 並列処理2
     let cnt2 = Arc::clone(&counter);
     let uniq2 = Arc::clone(&uniq_a);
     let heads2 = Arc::clone(&heads_a);
@@ -94,6 +48,7 @@ fn main() {
         count_equal(vecs_a, target.to_string(), uniq2, heads2, cnt2);
     });
 
+    // 並列処理の終了を待つ
     handle1.join().unwrap();
     handle2.join().unwrap();
     // 値を出力
@@ -103,8 +58,6 @@ fn count_equal(
     vecs: Vec<Vec<i32>>,
     target: String,
     uniq: Arc<HashSet<char>>,
-    // uniq: HashSet<char>,
-    // heads: Vec<char>,
     heads: Arc<Vec<char>>,
     cnt: Arc<Mutex<i32>>,
 ) {
