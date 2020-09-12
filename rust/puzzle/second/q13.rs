@@ -21,67 +21,99 @@ fn main() {
         .split(target)
         .map(|w| w.chars().next().unwrap_or('0'))
         .collect::<Vec<_>>();
+    let should_not_zero_loc = set_heads_loc(&heads, &uniq);
 
     // 各アルファベットに数値割当（頭0省く）
     let mut vecs = permutations(uniq.len() as i32, uniq.len() as i32);
-
     let vecs_a = vecs.split_off(vecs.len() / 2);
 
     // アルファベットと数値の対応関係をtargetに反映
     let counter = Arc::new(Mutex::new(0));
     let uniq_a = Arc::new(uniq);
-    let heads_a = Arc::new(heads);
+    let should_not_zero_loc_a = Arc::new(should_not_zero_loc);
 
     // 並列処理1
-    let cnt1 = Arc::clone(&counter);
-    let uniq1 = Arc::clone(&uniq_a);
-    let heads1 = Arc::clone(&heads_a);
-    let handle1 = thread::spawn(move || {
-        count_equal(vecs, target.to_string(), uniq1, heads1, cnt1);
-    });
+    let handle1 = spawn_count_equal(
+        vecs,
+        &counter,
+        &uniq_a,
+        &should_not_zero_loc_a,
+        target.to_string(),
+    );
 
     // 並列処理2
-    let cnt2 = Arc::clone(&counter);
-    let uniq2 = Arc::clone(&uniq_a);
-    let heads2 = Arc::clone(&heads_a);
-    let handle2 = thread::spawn(move || {
-        count_equal(vecs_a, target.to_string(), uniq2, heads2, cnt2);
-    });
+    let handle2 = spawn_count_equal(
+        vecs_a,
+        &counter,
+        &uniq_a,
+        &should_not_zero_loc_a,
+        target.to_string(),
+    );
 
     // 並列処理の終了を待つ
     handle1.join().unwrap();
     handle2.join().unwrap();
+
     // 値を出力
     println!("{}", *counter.lock().unwrap());
 }
+
+fn spawn_count_equal(
+    vec: Vec<Vec<i32>>,
+    counter: &Arc<Mutex<i32>>,
+    uniq: &Arc<HashSet<char>>,
+    should_not_zero_loc: &Arc<Vec<i32>>,
+    target: String,
+) -> thread::JoinHandle<()> {
+    let cnt = Arc::clone(&counter);
+    let uniq = Arc::clone(&uniq);
+    let should_not_zero_loc = Arc::clone(&should_not_zero_loc);
+    thread::spawn(move || {
+        count_equal(vec, target, uniq, should_not_zero_loc, cnt);
+    })
+}
+
 fn count_equal(
     vecs: Vec<Vec<i32>>,
     target: String,
     uniq: Arc<HashSet<char>>,
-    heads: Arc<Vec<char>>,
+    should_not_zero_loc: Arc<Vec<i32>>,
     cnt: Arc<Mutex<i32>>,
 ) {
     for v in vecs {
-        let mut tmp = target.to_string();
-        let mut rep_cnt = 0;
-        for (i, c) in uniq.iter().enumerate() {
-            let num = &v[i].to_string();
-            if num == &'0'.to_string() {
-                if is_exist(&heads, c) {
-                    break;
-                }
-            }
+        if contain_head_zero(&should_not_zero_loc, &v) {
+            continue;
+        }
+
+        let mut tmp = target.clone();
+        for (c, n) in uniq.iter().zip(v.iter()) {
+            let num = &n.to_string();
             tmp = tmp.replace(&c.to_string(), num);
-            rep_cnt += 1;
-            if rep_cnt == uniq.len() {
-                // evalで計算しtrueになったらカウント
-                if eval(&tmp).unwrap() == true {
-                    let mut num = cnt.lock().unwrap();
-                    *num += 1;
-                }
-            }
+        }
+        if eval(&tmp).unwrap() == true {
+            let mut num = cnt.lock().unwrap();
+            *num += 1;
         }
     }
+}
+fn contain_head_zero(should_not_zero_loc: &Vec<i32>, v: &Vec<i32>) -> bool {
+    let mut is_head_zero = false;
+    for loc in should_not_zero_loc.iter() {
+        if (0 as i32) == v[(*loc as usize)] {
+            is_head_zero = true;
+            break;
+        }
+    }
+    is_head_zero
+}
+fn set_heads_loc(heads: &Vec<char>, uniq: &HashSet<char>) -> Vec<i32> {
+    let mut should_not_zero_loc: Vec<i32> = vec![];
+    for (i, c) in uniq.iter().enumerate() {
+        if is_exist(heads, c) {
+            should_not_zero_loc.push(i as i32);
+        };
+    }
+    should_not_zero_loc
 }
 
 fn is_exist(heads: &Vec<char>, c: &char) -> bool {
