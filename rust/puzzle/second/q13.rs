@@ -109,7 +109,8 @@ fn contain_head_zero(should_not_zero_loc: &Vec<i32>, v: &Vec<i32>) -> bool {
 fn set_heads_loc(heads: &Vec<char>, uniq: &HashSet<char>) -> Vec<i32> {
     let mut should_not_zero_loc: Vec<i32> = vec![];
     for (i, c) in uniq.iter().enumerate() {
-        if heads.iter().any(|i| i == c) {
+        // if heads.iter().any(|i| i == c) {
+        if heads.contains(c) {
             should_not_zero_loc.push(i as i32);
         }
     }
