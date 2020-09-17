@@ -109,20 +109,11 @@ fn contain_head_zero(should_not_zero_loc: &Vec<i32>, v: &Vec<i32>) -> bool {
 fn set_heads_loc(heads: &Vec<char>, uniq: &HashSet<char>) -> Vec<i32> {
     let mut should_not_zero_loc: Vec<i32> = vec![];
     for (i, c) in uniq.iter().enumerate() {
-        if is_exist(heads, c) {
+        if heads.iter().any(|i| i == c) {
             should_not_zero_loc.push(i as i32);
-        };
-    }
-    should_not_zero_loc
-}
-
-fn is_exist(heads: &Vec<char>, c: &char) -> bool {
-    for i in heads.iter() {
-        if i == c {
-            return true;
         }
     }
-    false
+    should_not_zero_loc
 }
 
 fn permutations(n: i32, m: i32) -> Vec<Vec<i32>> {
@@ -156,12 +147,4 @@ fn test_perm() {
         [2, 1, 0],
     ];
     assert_eq!(v, assert_v);
-}
-
-#[test]
-fn test_is_exist() {
-    let heads = vec!['H', 'I', 'B', 'P'];
-    assert_eq!(is_exist(&heads, &'B'), true);
-
-    assert_eq!(is_exist(&heads, &'A'), false);
 }
