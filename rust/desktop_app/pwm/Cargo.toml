@@ -11,3 +11,6 @@ iced = {version = "0.1.1", features = ["async-std"]}
 iced_native = "0.2.2"
 iced_futures = "0.1.2"
 async-std = {version = "1.6.1", features = ["unstable"]}
+csv = "1.1"
+serde = { version = "1", features = ["derive"] }
+regex = "1"
