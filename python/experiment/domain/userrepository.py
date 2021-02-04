@@ -1,20 +1,18 @@
-from abc import ABC, ABCMeta, abstractclassmethod
+from iuserrepository import IUserRepository
 from user import User
 from username import UserName
 
 
-class IUserRepository(metaclass=ABCMeta):
+class UserRepository(IUserRepository):
     def __init__(self):
         pass
 
-    @abstractclassmethod
     def save(self, user: User):
+        # クエリ
         pass
 
-    @abstractclassmethod
     def find(self, name: UserName) -> User:
         pass
 
-    @abstractclassmethod
     def exists(self, user: User) -> bool:
         pass
