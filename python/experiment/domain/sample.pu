@@ -1,0 +1,50 @@
+@startuml
+
+class User {
+    +id: UserId
+    +name: UserName
+    +change_name()
+}
+
+class UserId {
+    +id: str
+}
+
+class UserName {
+    +name: str
+}
+
+class UserRepository {
+    +save()
+    +exists()
+    +find()
+}
+
+class UserService {
+    -_user_repository: IUserRepository
+    +save()
+    +exists()
+}
+
+class UserApplicationService {
+    -_user_service: UserService
+    -_user_repository: IUserRepository
+}
+
+Interface IUserRepository {
+    +save()
+    +exists()
+    +find()
+}
+
+User *-- UserId
+User *-- UserName
+IUserRepository <|-- UserRepository
+UserService *-- IUserRepository
+UserApplicationService *-- IUserRepository
+UserService -- User
+UserApplicationService -- User
+UserApplicationService -- UserId
+UserApplicationService -- UserName
+
+@enduml
