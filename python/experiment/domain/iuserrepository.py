@@ -1,6 +1,7 @@
 from abc import ABC, ABCMeta, abstractclassmethod
 from user import User
 from username import UserName
+from userid import UserId
 
 
 class IUserRepository(metaclass=ABCMeta):
@@ -12,9 +13,9 @@ class IUserRepository(metaclass=ABCMeta):
         pass
 
     @abstractclassmethod
-    def find(self, name: UserName) -> User:
+    def find(self, name: UserName = None, id: UserId = None) -> User:
         pass
 
     @abstractclassmethod
-    def exists(self, user: User) -> bool:
+    def delete(self, user: User):
         pass
