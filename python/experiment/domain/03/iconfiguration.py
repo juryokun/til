@@ -1,5 +1,8 @@
-from abc import ABC, ABCMeta, abstractclassmethod
+from abc import ABCMeta, abstractclassmethod
+from injector import Module
 
 
-class IConfiguration(metaclass=ABCMeta):
-    pass
+class IConfiguration(metaclass=ABCMetae):
+    @abstractclassmethod
+    def configure(self, Module):
+        pass
