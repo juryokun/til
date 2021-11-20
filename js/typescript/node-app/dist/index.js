@@ -7,10 +7,14 @@ const promptInput = async (text) => {
     const input = await new Promise((resolve) => process.stdin.once('data', (data) => resolve(data.toString())));
     return input.trim();
 };
+class HintAndBlow {
+    constructor() {
+        this.answerSource = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        this.answer = [];
+        this.tryCount = 0;
+    }
+}
+;
 (async () => {
-    const name = await promptInput('名前を入力してください');
-    console.log(name);
-    const age = await promptInput('年齢を入力してください');
-    console.log(age);
-    process.exit();
+    const hintAndBlow = new HintAndBlow();
 })();

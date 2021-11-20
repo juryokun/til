@@ -9,12 +9,12 @@ const promptInput = async (text: string) => {
     return input.trim()
 }
 
-(async () => {
-    const name = await promptInput('名前を入力してください')
-    console.log(name)
+class HintAndBlow {
+    answerSource = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    answer: string[] = []
+    tryCount = 0
+}
 
-    const age = await promptInput('年齢を入力してください')
-    console.log(age)
-
-    process.exit()
+; (async () => {
+    const hintAndBlow = new HintAndBlow()
 })()
