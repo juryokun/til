@@ -14,37 +14,66 @@ fn load_json<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn std::error::Error>> 
         while pos < c.len() {
             let cc = c[pos];
             match cc {
-                b'{' => words.push(from_utf8(&[cc]).unwrap().to_string()),
-                b'}' => words.push(from_utf8(&[cc]).unwrap().to_string()),
-                b',' => words.push(from_utf8(&[cc]).unwrap().to_string()),
-                b'"' => {
-                    pos = pos + 1;
-                    let start_pos = pos;
-                    let mut end_pos = 0;
-                    while pos < c.len() {
-                        if c[pos] == b'"' {
-                            end_pos = pos;
-                            break;
-                        }
-                        pos = pos + 1;
-                    }
-                    if end_pos == 0 {
-                        words.push("".to_string());
-                    }
-                    words.push(from_utf8(&c[start_pos..end_pos]).unwrap().to_string());
+                b'{' => {
+                    let moji = fetch_charactor(c, pos, pos + 1);
+                    words.push(moji.charactor);
+                    pos = moji.end + 1;
                 }
-                _ => (),
+                b'}' => {
+                    let moji = fetch_charactor(c, pos, pos + 1);
+                    words.push(moji.charactor);
+                    pos = moji.end + 1;
+                }
+                b',' => {
+                    let moji = fetch_charactor(c, pos, pos + 1);
+                    words.push(moji.charactor);
+                    pos = moji.end + 1;
+                }
+                b'"' => {
+                    let moji = identify(c, pos);
+                    words.push(moji.charactor);
+                    pos = moji.end + 1;
+                }
+                _ => pos = pos + 1,
             }
             // let n = from_utf8(&cc).unwrap();
             // match n {
             //     "{" => words.push(n.to_string()),
             // }
             // println!("{}", n);
-            pos = pos + 1;
         }
     }
     println!("{:?}", words);
     Ok(())
+}
+
+struct MOJI {
+    charactor: String,
+    start: usize,
+    end: usize,
+}
+
+fn identify(line: &[u8], mut pos: usize) -> MOJI {
+    let start_pos = pos;
+    pos = pos + 1;
+    let mut end_pos = 0;
+    while pos < line.len() {
+        if line[pos] == b'"' {
+            end_pos = pos + 1;
+            break;
+        }
+        pos = pos + 1;
+    }
+    fetch_charactor(line, start_pos, end_pos)
+}
+
+fn fetch_charactor(line: &[u8], start: usize, end: usize) -> MOJI {
+    let moji = from_utf8(&line[start..end]).unwrap().to_string();
+    MOJI {
+        charactor: moji,
+        start: start,
+        end: end,
+    }
 }
 
 #[cfg(test)]
