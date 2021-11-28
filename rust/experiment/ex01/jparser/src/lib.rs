@@ -11,36 +11,35 @@ fn load_json<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn std::error::Error>> 
 
         let c = l.as_bytes();
         let mut pos = 0;
+
+        macro_rules! push_charactor {
+            ($moji: expr) => {
+                words.push($moji.charactor);
+                pos = $moji.end;
+            };
+        }
         while pos < c.len() {
             let cc = c[pos];
+            // let moji = from_utf8(&line[start..end]).unwrap().to_string();
+            println!("{}", from_utf8(&[cc]).unwrap().to_string());
             match cc {
                 b'{' => {
-                    let moji = fetch_charactor(c, pos, pos + 1);
-                    words.push(moji.charactor);
-                    pos = moji.end + 1;
+                    push_charactor!(fetch_charactor(c, pos, pos + 1));
                 }
                 b'}' => {
-                    let moji = fetch_charactor(c, pos, pos + 1);
-                    words.push(moji.charactor);
-                    pos = moji.end + 1;
+                    push_charactor!(fetch_charactor(c, pos, pos + 1));
                 }
                 b',' => {
-                    let moji = fetch_charactor(c, pos, pos + 1);
-                    words.push(moji.charactor);
-                    pos = moji.end + 1;
+                    push_charactor!(fetch_charactor(c, pos, pos + 1));
+                }
+                b':' => {
+                    push_charactor!(fetch_charactor(c, pos, pos + 1));
                 }
                 b'"' => {
-                    let moji = identify(c, pos);
-                    words.push(moji.charactor);
-                    pos = moji.end + 1;
+                    push_charactor!(identify(c, pos));
                 }
                 _ => pos = pos + 1,
             }
-            // let n = from_utf8(&cc).unwrap();
-            // match n {
-            //     "{" => words.push(n.to_string()),
-            // }
-            // println!("{}", n);
         }
     }
     println!("{:?}", words);
