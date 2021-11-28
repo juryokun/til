@@ -1,4 +1,18 @@
-{
-    "id": "1",
-    "sample": "abc"
-}
+[
+    {
+        "id": "1",
+        "sample": "abc",
+        "sample2": {
+            "id": "2",
+            "sample3": "def"
+        }
+    },
+    {
+        "id": "1",
+        "sample": "abc",
+        "sample2": {
+            "id": "2",
+            "sample3": "def"
+        }
+    }
+]

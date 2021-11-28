@@ -20,8 +20,6 @@ fn load_json<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn std::error::Error>> 
         }
         while pos < c.len() {
             let cc = c[pos];
-            // let moji = from_utf8(&line[start..end]).unwrap().to_string();
-            println!("{}", from_utf8(&[cc]).unwrap().to_string());
             match cc {
                 b'{' => {
                     push_charactor!(fetch_charactor(c, pos, pos + 1));
@@ -33,6 +31,12 @@ fn load_json<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn std::error::Error>> 
                     push_charactor!(fetch_charactor(c, pos, pos + 1));
                 }
                 b':' => {
+                    push_charactor!(fetch_charactor(c, pos, pos + 1));
+                }
+                b'[' => {
+                    push_charactor!(fetch_charactor(c, pos, pos + 1));
+                }
+                b']' => {
                     push_charactor!(fetch_charactor(c, pos, pos + 1));
                 }
                 b'"' => {
