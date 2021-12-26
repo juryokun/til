@@ -62,6 +62,10 @@ fn identify(line: &[u8], mut pos: usize) -> MOJI {
     let mut end_pos = 0;
     while pos < line.len() {
         if line[pos] == b'"' {
+            if line[pos - 1] == b'\\' {
+                pos = pos + 1;
+                continue;
+            }
             end_pos = pos + 1;
             break;
         }
@@ -79,6 +83,30 @@ fn fetch_charactor(line: &[u8], start: usize, end: usize) -> MOJI {
     }
 }
 
+type Jsons = Vec<Json>;
+#[derive(Debug)]
+enum Json {
+    Recursive { key: String, value: Box<Json> },
+    End { key: String, value: String },
+}
+
+fn test_data() -> Jsons {
+    let json1 = Json::End {
+        key: "aaa".to_string(),
+        value: "aval".to_string(),
+    };
+    let json2 = Json::Recursive {
+        key: "bbb".to_string(),
+        value: Box::new(json1),
+    };
+    let json3 = Json::Recursive {
+        key: "ccc".to_string(),
+        value: Box::new(json2),
+    };
+
+    vec![json3]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -93,5 +121,9 @@ mod tests {
         let file_path = Path::new(file);
 
         load_json(file_path);
+    }
+    #[test]
+    fn print_json() {
+        println!("{:?}", test_data());
     }
 }

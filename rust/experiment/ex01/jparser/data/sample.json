@@ -4,7 +4,7 @@
         "sample": "abc",
         "sample2": {
             "id": "2",
-            "sample3": "def"
+            "sample3": "d\"ef"
         }
     },
     {
