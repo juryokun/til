@@ -8,7 +8,7 @@ pub enum Token {
     LeftBrace,      // {  JSON object 開始文字
     RightBrace,     // }  JSON object 終了文字
     LeftBracket,    // [  JSON array  開始文字
-    RightBrachet,   // ]  JSON array  終了文字
+    RightBracket,   // ]  JSON array  終了文字
     Comma,          // ,  JSON value  区切り文字
     Colon,          // :  "key":value 区切り文字
 }
@@ -71,7 +71,7 @@ impl<'a> Lexer<'a> {
                 '{' => Ok(self.next_return_token(Token::LeftBrace)),
                 '}' => Ok(self.next_return_token(Token::RightBrace)),
                 '[' => Ok(self.next_return_token(Token::LeftBracket)),
-                ']' => Ok(self.next_return_token(Token::RightBrachet)),
+                ']' => Ok(self.next_return_token(Token::RightBracket)),
                 ',' => Ok(self.next_return_token(Token::Comma)),
                 ':' => Ok(self.next_return_token(Token::Colon)),
 
@@ -330,5 +330,84 @@ mod tests {
         let s = r#""\uD83D\uDE04\uD83D\uDE07\uD83D\uDC7A""#;
         let tokens = Lexer::new(&s).tokenize().unwrap();
         assert_eq!(tokens[0], Token::String(r#"😄😇👺"#.to_string()));
+    }
+    #[test]
+    fn test_tokenize() {
+        let obj = r#"
+        {
+            "number": 123,
+            "boolean": true,
+            "string": "togatoga",
+            "object": {
+               "number": 2E10
+            }
+         }
+         "#;
+        // object
+        let tokens = Lexer::new(obj).tokenize().unwrap();
+        let result_tokens = [
+            // start {
+            Token::LeftBrace,
+            // begin: "number": 123,
+            Token::String("number".to_string()),
+            Token::Colon,
+            Token::Number(123f64),
+            Token::Comma,
+            // end
+
+            // begin: "boolean": true,
+            Token::String("boolean".to_string()),
+            Token::Colon,
+            Token::Bool(true),
+            Token::Comma,
+            // end
+
+            // begin: "string": "togatoga",
+            Token::String("string".to_string()),
+            Token::Colon,
+            Token::String("togatoga".to_string()),
+            Token::Comma,
+            // end
+
+            // begin: "object": {
+            Token::String("object".to_string()),
+            Token::Colon,
+            Token::LeftBrace,
+            // begin: "number": 2E10,
+            Token::String("number".to_string()),
+            Token::Colon,
+            Token::Number(20000000000f64),
+            // end
+            Token::RightBrace,
+            // end
+            Token::RightBrace,
+            // end
+        ];
+        tokens
+            .iter()
+            .zip(result_tokens.iter())
+            .enumerate()
+            .for_each(|(i, (x, y))| {
+                assert_eq!(x, y, "index: {}", i);
+            });
+
+        // array
+        let a = "[true, {\"キー\": null}]";
+        let tokens = Lexer::new(a).tokenize().unwrap();
+        let result_tokens = vec![
+            Token::LeftBracket,
+            Token::Bool(true),
+            Token::Comma,
+            Token::LeftBrace,
+            Token::String("キー".to_string()),
+            Token::Colon,
+            Token::Null,
+            Token::RightBrace,
+            Token::RightBracket,
+        ];
+        tokens
+            .iter()
+            .zip(result_tokens.iter())
+            .for_each(|(x, y)| assert_eq!(x, y));
     }
 }
