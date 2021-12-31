@@ -168,12 +168,90 @@ impl<'a> Lexer<'a> {
 
     /// 終端文字'\"'まで文字列を読み込む。UTF-16(\u000~\uFFF)や特殊なエスケープ文字(e.g. '\t', '\n')も考慮する
     fn parse_string_token(&mut self) -> Result<Option<Token>, LexerError> {
-        unimplemented!()
+        let mut utf16 = vec![];
+        let mut result = String::new();
+
+        while let Some(c1) = self.chars.next() {
+            match c1 {
+                // Escapeの開始文字'\\'
+                '\\' => {
+                    let c2 = self
+                        .chars
+                        .next()
+                        .ok_or_else(|| LexerError::new("error: a next char is expected"))?;
+                    if matches!(c2, '"' | '\\' | '/' | 'b' | 'f' | 'n' | 'r' | 't') {
+                        // 特殊なエスケープ文字列の処理
+                        // https://www.rfc-editor.org/rfc/rfc8259#section-7
+                        // utf16のバッファを文字列にpushしておく
+                        Self::push_utf16(&mut result, &mut utf16)?;
+                        // 今回はエスケープ処理はせずに入力のまま保持しておく
+                        result.push('\\');
+                        result.push(c2);
+                    } else if c2 == 'u' {
+                        // UTF-16
+                        // \u000 ~ \uFFFF
+                        // \uまで読み込んだので残りの0000~XXXXの4文字を読み込む
+                        // UTF-16に関してはエスケープ処理を行う
+                        let hexs = (0..4)
+                            .filter_map(|_| {
+                                let c = self.chars.next()?;
+                                if c.is_ascii_hexdigit() {
+                                    Some(c)
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect::<Vec<_>>();
+
+                        // 読み込んだ文字列を16進数として評価しutf16のバッファにpushしておく
+                        match u16::from_str_radix(&hexs.iter().collect::<String>(), 16) {
+                            Ok(code_point) => utf16.push(code_point),
+                            Err(e) => {
+                                return Err(LexerError::new(&format!(
+                                    "error: a unicode character is expected {}",
+                                    e.to_string()
+                                )))
+                            }
+                        };
+                    } else {
+                        return Err(LexerError::new(&format!(
+                            "error: an unexpected escaped char {}",
+                            c2
+                        )));
+                    }
+                }
+                // 文字列の終端'"'
+                '\"' => {
+                    // utf16のバッファを文字列にpushしておく
+                    Self::push_utf16(&mut result, &mut utf16)?;
+                    return Ok(Some(Token::String(result)));
+                }
+                // それ以外の文字列
+                _ => {
+                    // utf16のバッファを文字列にpushしておく
+                    Self::push_utf16(&mut result, &mut utf16)?;
+                    result.push(c1);
+                }
+            }
+        }
+        Ok(None)
     }
 
     /// utf16のバッファが存在するならば連結しておく
     fn push_utf16(result: &mut String, utf16: &mut Vec<u16>) -> Result<(), LexerError> {
-        unimplemented!()
+        if utf16.is_empty() {
+            return Ok(());
+        }
+        match String::from_utf16(utf16) {
+            Ok(utf16_str) => {
+                result.push_str(&utf16_str);
+                utf16.clear();
+            }
+            Err(e) => {
+                return Err(LexerError::new(&format!("error: {}", e.to_string())));
+            }
+        };
+        Ok(())
     }
 }
 
@@ -226,5 +304,31 @@ mod tests {
         let num = "+2E10";
         let tokens = Lexer::new(num).tokenize().unwrap();
         assert_eq!(tokens[0], Token::Number(20000000000f64));
+    }
+    #[test]
+    fn test_string() {
+        let s = "\"togatoga123\"";
+        let tokens = Lexer::new(s).tokenize().unwrap();
+        assert_eq!(tokens[0], Token::String("togatoga123".to_string()));
+
+        let s = "\"あいうえお\"";
+        let tokens = Lexer::new(s).tokenize().unwrap();
+        assert_eq!(tokens[0], Token::String("あいうえお".to_string()));
+
+        let s = r#""\u3042\u3044\u3046abc""#; //あいうabc
+
+        let tokens = Lexer::new(s).tokenize().unwrap();
+        assert_eq!(tokens[0], Token::String("あいうabc".to_string()));
+
+        let s = format!(r#" " \b \f \n \r \t \/ \" ""#);
+        let tokens = Lexer::new(&s).tokenize().unwrap();
+        assert_eq!(
+            tokens[0],
+            Token::String(r#" \b \f \n \r \t \/ \" "#.to_string())
+        );
+
+        let s = r#""\uD83D\uDE04\uD83D\uDE07\uD83D\uDC7A""#;
+        let tokens = Lexer::new(&s).tokenize().unwrap();
+        assert_eq!(tokens[0], Token::String(r#"😄😇👺"#.to_string()));
     }
 }
