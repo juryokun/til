@@ -125,7 +125,32 @@ impl<'a> Lexer<'a> {
 
     /// (true|false)の文字列をparseする
     fn parse_bool_token(&mut self, b: bool) -> Result<Option<Token>, LexerError> {
-        unimplemented!()
+        // 文字列が(true|false)以外になっていないかを確認し、問題なければ値を返す
+        macro_rules! match_bool {
+            ($x:expr) => {
+                // boolean型の(true|false)を文字列にする
+                let bool_str = stringify!($x);
+                let length = bool_str.len();
+
+                // (true|false)という文字列が生成されるはず
+                let s = (0..length)
+                    .filter_map(|_| self.chars.next())
+                    .collect::<String>();
+
+                if s == bool_str {
+                    return Ok(Some(Token::Bool($x)));
+                }
+                return Err(LexerError::new(&format!(
+                    "error: a boolean {} is expected {}",
+                    bool_str, s,
+                )));
+            };
+        }
+
+        if b {
+            match_bool!(true);
+        }
+        match_bool!(false);
     }
 
     /// 数字として使用可能な文字まで読み込む。読み込んだ文字列が数字(`f64`)としてparseに成功した場合Tokenを返す。
@@ -152,5 +177,16 @@ mod tests {
         let null = "null";
         let tokens = Lexer::new(null).tokenize().unwrap();
         assert_eq!(tokens[0], Token::Null);
+    }
+
+    #[test]
+    fn test_bool() {
+        let b = "true";
+        let tokens = Lexer::new(b).tokenize().unwrap();
+        assert_eq!(tokens[0], Token::Bool(true));
+
+        let b = "false";
+        let tokens = Lexer::new(b).tokenize().unwrap();
+        assert_eq!(tokens[0], Token::Bool(false));
     }
 }
