@@ -38,7 +38,68 @@ impl Parser {
     ///     "key2": 6789,
     /// }
     fn parse_object(&mut self) -> Result<Value, ParserError> {
-        todo!()
+        // 先頭は必ず {
+        let token = self.peek_expect()?;
+        if *token != Token::LeftBrace {
+            return Err(ParserError::new(&format!(
+                "error: JSON object must starts {{ {:?}",
+                token
+            )));
+        }
+        // { を読み飛ばす
+        self.next_expect()?;
+
+        let mut object = std::collections::BTreeMap::new();
+
+        // } なら空の`Object`を返す
+        if *self.peek_expect()? == Token::RightBracket {
+            return Ok(Value::Object(object));
+        }
+
+        loop {
+            // 2文字分の`Token`を読み出す
+            let token1 = self.next_expect()?.clone();
+            let token2 = self.next_expect()?;
+
+            match (token1, token2) {
+                // token1とtoken2はそれぞれ"key"(`Token::String`)と:(`Token::Colon`)であることを想定している
+                // e.g. "key": 12345
+                // "key" (`Token::String`)
+                // : (`Token::Colon`)
+                (Token::String(key), Token::Colon) => {
+                    // 残りの`Value`(12345)をパースする
+                    object.insert(key, self.parse()?);
+                }
+                // それ以外はエラー
+                _ => {
+                    return Err(ParserError::new(
+                        "error: a pair (key(string) and : token) token is expected",
+                    ));
+                }
+            }
+            // `Object`が終端かもしくは次の要素(key-value)があるか
+            let token3 = self.next_expect()?;
+            match token3 {
+                // } `Object`の終端だったら`object`を返す
+                Token::RightBrace => {
+                    return Ok(Value::Object(object));
+                }
+                // , なら次の要素(key-value)のパースする
+                // {
+                //     "key1": 12345,
+                //     "key2": 6789,
+                // }
+                Token::Comma => {
+                    continue;
+                }
+                _ => {
+                    return Err(ParserError::new(&format!(
+                        "error: a {{ or , token is expected {:?}",
+                        token3
+                    )));
+                }
+            }
+        }
     }
 
     /// `Token`を評価して`Value`に変換する。この関数は再帰的に呼び出される
@@ -106,7 +167,35 @@ mod tests {
     use std::collections::BTreeMap;
 
     #[test]
-    fn test_parse_object() {}
+    fn test_parse_object() {
+        let json = r#"{"togatoga" : "monkey-json"}"#;
+        let value = Parser::new(Lexer::new(json).tokenize().unwrap())
+            .parse()
+            .unwrap();
+        let mut object = BTreeMap::new();
+        object.insert(
+            "togatoga".to_string(),
+            Value::String("monkey-json".to_string()),
+        );
+        assert_eq!(value, Value::Object(object));
+
+        let json = r#"
+        {
+            "key": {
+                "key": false
+            }
+        }
+        "#;
+
+        let value = Parser::new(Lexer::new(json).tokenize().unwrap())
+            .parse()
+            .unwrap();
+        let mut object = BTreeMap::new();
+        let mut nested_object = BTreeMap::new();
+        nested_object.insert("key".to_string(), Value::Bool(false));
+        object.insert("key".to_string(), Value::Object(nested_object));
+        assert_eq!(value, Value::Object(object));
+    }
 
     #[test]
     fn test_parse_array() {}
