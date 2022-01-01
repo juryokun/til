@@ -43,7 +43,36 @@ impl Parser {
 
     /// `Token`を評価して`Value`に変換する。この関数は再帰的に呼び出される
     fn parse(&mut self) -> Result<Value, ParserError> {
-        todo!()
+        let token = self.peek_expect()?.clone();
+        let value = match token {
+            // { はObjectの開始文字
+            Token::LeftBrace => self.parse_object(),
+            // [ はArrayの開始文字
+            Token::LeftBracket => self.parse_array(),
+            Token::String(s) => {
+                self.next_expect()?;
+                Ok(Value::String(s))
+            }
+            Token::Number(n) => {
+                self.next_expect()?;
+                Ok(Value::Number(n))
+            }
+            Token::Bool(b) => {
+                self.next_expect()?;
+                Ok(Value::Bool(b))
+            }
+            Token::Null => {
+                self.next_expect()?;
+                Ok(Value::Null)
+            }
+            _ => {
+                return Err(ParserError::new(&format!(
+                    "error: a token must start {{ or [ string or number or bool or null {:?}",
+                    token
+                )))
+            }
+        };
+        value
     }
 
     /// 先頭の`Token`を返す
