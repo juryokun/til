@@ -29,7 +29,48 @@ impl Parser {
     /// `Array`のパースを行う
     /// [1, 2, 3, null, "string"]
     fn parse_array(&mut self) -> Result<Value, ParserError> {
-        todo!()
+        // 先頭は必ず [
+        let token = self.peek_expect()?;
+        if *token != Token::LeftBracket {
+            return Err(ParserError::new(&format!(
+                "error: JSON array must starts [ {:?}",
+                token
+            )));
+        }
+        // [ を読み飛ばす
+        self.next_expect()?;
+
+        let mut array = vec![];
+        let token = self.peek_expect()?;
+        // ] なら空配列を返す
+        if *token == Token::RightBracket {
+            return Ok(Value::Array(array));
+        }
+
+        loop {
+            // 残りの`Value`をパースする
+            let value = self.parse()?;
+            array.push(value);
+
+            // `Array`が終端もしくは次の要素(`Value`)があるかを確認する
+            let token = self.next_expect()?;
+            match token {
+                // ] は`Array`の終端
+                Token::RightBracket => {
+                    return Ok(Value::Array(array));
+                }
+                // , なら次の要素(`Value`)をパースする
+                Token::Comma => {
+                    continue;
+                }
+                _ => {
+                    return Err(ParserError::new(&format!(
+                        "error: a [ or , token is epected {:?}",
+                        token
+                    )));
+                }
+            }
+        }
     }
 
     /// `Object`のパースを行う
@@ -198,7 +239,29 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_array() {}
+    fn test_parse_array() {
+        let json = r#"[null, 1, true, "monkey-json"]"#;
+        let value = Parser::new(Lexer::new(json).tokenize().unwrap())
+            .parse()
+            .unwrap();
+        let array = Value::Array(vec![
+            Value::Null,
+            Value::Number(1.0),
+            Value::Bool(true),
+            Value::String("monkey-json".to_string()),
+        ]);
+        assert_eq!(value, array);
+
+        let json = r#"[["togatoga", 123]]"#;
+        let value = Parser::new(Lexer::new(json).tokenize().unwrap())
+            .parse()
+            .unwrap();
+        let array = Value::Array(vec![Value::Array(vec![
+            Value::String("togatoga".to_string()),
+            Value::Number(123.0),
+        ])]);
+        assert_eq!(value, array);
+    }
 
     #[test]
     fn test_parse() {}
