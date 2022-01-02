@@ -144,7 +144,7 @@ impl Parser {
     }
 
     /// `Token`を評価して`Value`に変換する。この関数は再帰的に呼び出される
-    fn parse(&mut self) -> Result<Value, ParserError> {
+    pub fn parse(&mut self) -> Result<Value, ParserError> {
         let token = self.peek_expect()?.clone();
         let value = match token {
             // { はObjectの開始文字
@@ -264,5 +264,26 @@ mod tests {
     }
 
     #[test]
-    fn test_parse() {}
+    fn test_parse() {
+        let json = r#"{"key" : [1, "value"]}"#;
+        let value = Parser::new(Lexer::new(json).tokenize().unwrap())
+            .parse()
+            .unwrap();
+        let mut object = BTreeMap::new();
+        object.insert(
+            "key".to_string(),
+            Value::Array(vec![Value::Number(1.0), Value::String("value".to_string())]),
+        );
+        assert_eq!(value, Value::Object(object));
+
+        let json = r#"[{"key": "value"}]"#;
+        let value = Parser::new(Lexer::new(json).tokenize().unwrap())
+            .parse()
+            .unwrap();
+        let mut object = BTreeMap::new();
+        object.insert("key".to_string(), Value::String("value".to_string()));
+
+        let array = Value::Array(vec![Value::Object(object)]);
+        assert_eq!(value, array);
+    }
 }

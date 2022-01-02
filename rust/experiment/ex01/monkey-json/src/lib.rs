@@ -1,6 +1,7 @@
 mod lexer;
 mod parser;
 
+use lexer::*;
 use parser::*;
 use std::collections::BTreeMap;
 
@@ -17,7 +18,10 @@ pub enum Value {
 /// ユーザのエンドポイント
 /// 入力のJSON文字列から`Value`を返す
 pub fn parse(input: &str) -> Result<Value, ParserError> {
-    todo!()
+    match Lexer::new(input).tokenize() {
+        Ok(tokens) => Parser::new(tokens).parse(),
+        Err(e) => Err(ParserError::new(&e.msg)),
+    }
 }
 
 /// {"key": true}
