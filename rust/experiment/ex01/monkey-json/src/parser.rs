@@ -128,7 +128,7 @@ impl Parser {
                 // , なら次の要素(key-value)のパースする
                 // {
                 //     "key1": 12345,
-                //     "key2": 6789,
+                //     "key2": 6789
                 // }
                 Token::Comma => {
                     continue;
