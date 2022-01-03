@@ -1,8 +1,8 @@
 mod lexer;
 mod parser;
 
-use lexer::*;
-use parser::*;
+use lexer::Lexer;
+use parser::{Parser, ParserError};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialEq)]
