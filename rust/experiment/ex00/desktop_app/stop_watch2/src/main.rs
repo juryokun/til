@@ -22,6 +22,7 @@ struct GUI {
     tick_state: TickState,
     start_stop_button_state: button::State,
     reset_button_state: button::State,
+    send_button_state: button::State,
 }
 
 #[derive(Debug, Clone)]
@@ -30,6 +31,7 @@ pub enum Message {
     Stop,
     Reset,
     Update,
+    Send,
 }
 
 pub enum TickState {
@@ -50,6 +52,7 @@ impl Application for GUI {
                 tick_state: TickState::Stopped,
                 start_stop_button_state: button::State::new(),
                 reset_button_state: button::State::new(),
+                send_button_state: button::State::new(),
             },
             Command::none(),
         )
@@ -85,6 +88,7 @@ impl Application for GUI {
                 }
                 _ => {}
             },
+            Message::Send => {}
         }
         Command::none()
     }
@@ -125,8 +129,16 @@ impl Application for GUI {
         let tick_text = Text::new(duration_text).font(FONT).size(60);
         let start_stop_button = Button::new(&mut self.start_stop_button_state, start_stop_text)
             .min_width(80)
-            .min_width(80)
             .on_press(start_stop_message);
+
+        let send_button = Button::new(
+            &mut self.send_button_state,
+            Text::new("Send")
+                .horizontal_alignment(HorizontalAlignment::Center)
+                .font(FONT),
+        )
+        .min_width(80)
+        .on_press(Message::Send);
 
         let reset_button = Button::new(
             &mut self.reset_button_state,
@@ -143,6 +155,7 @@ impl Application for GUI {
                 Row::new()
                     .push(start_stop_button)
                     .push(reset_button)
+                    .push(send_button)
                     .spacing(10),
             )
             .spacing(10)
