@@ -218,8 +218,7 @@ fn main() {
 
 #[test]
 fn test_insert() {
-    let cred =
-        Credentials::from_file("apps-of-mine-firebase-adminsdk-aiyxf-06cc866563.json").unwrap();
+    let cred = Credentials::from_file("firebase-key.json").unwrap();
 
     let auth = ServiceSession::new(cred).unwrap();
 
