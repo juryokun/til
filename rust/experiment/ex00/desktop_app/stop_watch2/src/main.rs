@@ -6,9 +6,7 @@ use iced::{
 use iced_futures::{self, futures};
 use std::time::{Duration, Instant};
 
-use chrono::{Date, DateTime, Local, Utc};
-use firestore_db_and_auth::{documents, documents::List, dto, Credentials, ServiceSession};
-use serde::{Deserialize, Serialize};
+mod datastore;
 
 const FONT: Font = Font::External {
     name: "PixelMplus12-Regular",
@@ -27,12 +25,6 @@ struct GUI {
     start_stop_button_state: button::State,
     reset_button_state: button::State,
     send_button_state: button::State,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct MyDTD {
-    record: DateTime<Local>,
-    timestamp: DateTime<Local>,
 }
 
 #[derive(Debug, Clone)]
@@ -214,31 +206,4 @@ fn main() {
     let mut settings = Settings::default();
     settings.window.size = (400u32, 120u32);
     GUI::run(settings);
-}
-
-#[test]
-fn test_insert() {
-    let cred = Credentials::from_file("firebase-key.json").unwrap();
-
-    let auth = ServiceSession::new(cred).unwrap();
-
-    let da: MyDTD = MyDTD {
-        record: Local::now(),
-        timestamp: Local::now(),
-    };
-    let values = documents::write(
-        &auth,
-        "stop-watch",
-        Some("AABBCCDDD"),
-        &da,
-        documents::WriteOptions::default(),
-    );
-
-    let documents: List<MyDTD, ServiceSession> = documents::list(&auth, "stop-watch");
-
-    for doc in documents {
-        let (data, _document) = doc.unwrap();
-        // println!("{:?}", data);
-        println!("{:}", data.record.format("%Y-%m-%d %H:%M:%S").to_string());
-    }
 }
