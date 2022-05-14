@@ -1,35 +1,89 @@
-use chrono::{Date, DateTime, Local, Utc};
+use chrono::{Date, DateTime, Local, TimeZone, Utc};
 use firestore_db_and_auth::{documents, documents::List, dto, Credentials, ServiceSession};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
-struct MyDTD {
+struct FirestoreConnection {
+    auth: ServiceSession,
+}
+
+impl FirestoreConnection {
+    fn new() -> Self {
+        let cred = Credentials::from_file("firebase-key.json").unwrap();
+        let auth = ServiceSession::new(cred).unwrap();
+        Self { auth: auth }
+    }
+}
+
+trait RecordDao {
+    fn push_db(&self, record: Record);
+}
+
+struct RecordFirestoreDao(FirestoreConnection);
+impl RecordDao for RecordFirestoreDao {
+    fn push_db(&self, record: Record) {
+        #[derive(Serialize, Deserialize, Debug)]
+        struct RecordFirestore {
+            record: String,
+            timestamp: String,
+        }
+        let format_string = "%Y-%m-%d %H:%M:%S";
+        let data = RecordFirestore {
+            record: record.record.format(format_string).to_string(),
+            timestamp: record.timestamp.format(format_string).to_string(),
+        };
+
+        documents::write(
+            &self.0.auth,
+            "stop-watch",
+            Some(data.timestamp.clone()),
+            &data,
+            documents::WriteOptions::default(),
+        );
+    }
+}
+
+struct RecordService<R: RecordDao>(R);
+impl<R: RecordDao> RecordService<R> {
+    fn push_record(&self, record: Record) {
+        self.0.push_db(record);
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+struct Record {
     record: DateTime<Local>,
     timestamp: DateTime<Local>,
 }
 
-fn update() {
-    let cred = Credentials::from_file("firebase-key.json").unwrap();
-    let auth = ServiceSession::new(cred).unwrap();
+impl Record {
+    fn create(datetime: DateTime<Local>) -> Self {
+        Self {
+            record: datetime,
+            timestamp: Local::now(),
+        }
+    }
 
-    let da: MyDTD = MyDTD {
-        record: Local::now(),
-        timestamp: Local::now(),
-    };
-    let values = documents::write(
-        &auth,
-        "stop-watch",
-        Some("AABBCCDDD"),
-        &da,
-        documents::WriteOptions::default(),
-    );
+    // fn transform_for_db(&self) -> RecordFirebase {
+    //     let format_string = "%Y-%m-%d %H:%M:%S";
+    //     RecordFirebase {
+    //         record: self.record.format(format_string).to_string(),
+    //         timestamp: self.record.format(format_string).to_string(),
+    //     }
+    // }
 }
 
-fn fetch_list() -> Vec<MyDTD> {
+fn update<R: RecordDao>(dao: R, time: DateTime<Local>) {
+    let data = Record::create(time);
+
+    let record_service = RecordService(dao);
+    record_service.push_record(data);
+}
+
+fn fetch_list() -> Vec<Record> {
     let cred = Credentials::from_file("firebase-key.json").unwrap();
     let auth = ServiceSession::new(cred).unwrap();
 
-    let documents: List<MyDTD, ServiceSession> = documents::list(&auth, "stop-watch");
+    let documents: List<Record, ServiceSession> = documents::list(&auth, "stop-watch");
 
     let mut rel_vec = vec![];
     for doc in documents {
@@ -44,14 +98,35 @@ fn fetch_list() -> Vec<MyDTD> {
 
 mod test {
     use super::*;
+    use std::fs::File;
+    use std::io::{BufReader, BufWriter, Read, Write};
+
+    struct RecordTestDao;
+    impl RecordDao for RecordTestDao {
+        fn push_db(&self, record: Record) {
+            let mut writer = BufWriter::new(File::create("record.json").unwrap());
+            let data = serde_json::to_string(&record).unwrap();
+            writer.write(data.as_bytes());
+        }
+    }
 
     #[test]
-    fn test_list() {
-        update();
-        let list = fetch_list();
-        for data in list {
-            println!("{:?}", data);
-            // println!("{:}", data.record.format("%Y-%m-%d %H:%M:%S").to_string());
-        }
+    fn test_update() {
+        std::fs::remove_file("record.json");
+
+        let target = Record {
+            record: Local.ymd(2022, 5, 1).and_hms(12, 10, 9),
+            timestamp: Local::now(),
+        };
+
+        let dao = RecordTestDao;
+        // let dao = RecordFirestoreDao(FirestoreConnection::new());
+        update(dao, target.record);
+
+        let reader = BufReader::new(File::open("record.json").unwrap());
+        let record: Record = serde_json::from_reader(reader).unwrap();
+
+        assert_eq!(target.record, record.record);
+        std::fs::remove_file("record.json");
     }
 }
