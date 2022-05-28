@@ -1,5 +1,5 @@
 use super::*;
-use chrono::{DateTime, Local, TimeZone};
+use chrono::{DateTime, Local};
 use firestore_db_and_auth::{documents, documents::List, dto, Credentials, ServiceSession};
 use serde::{Deserialize, Serialize};
 
@@ -135,13 +135,16 @@ mod test {
                 let target = Duration::new(60, 0);
 
                 let dao = RecordTestDao;
-                // let dao = RecordFirestoreDao(FirestoreConnection::new());
                 update(dao, target);
 
                 let reader = BufReader::new(File::open("record.json").unwrap());
                 let record: Record = serde_json::from_reader(reader).unwrap();
 
                 assert_eq!(target, record.record);
+
+                // 作成日時は現在時刻との差が0秒であることで正とする
+                let duration_created_datetime = Local::now() - record.timestamp;
+                assert_eq!(duration_created_datetime.num_seconds(), 0);
             }
         }
         let test = TestSuite;
