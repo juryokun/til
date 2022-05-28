@@ -7,6 +7,7 @@ use iced_futures::{self, futures};
 use std::time::{Duration, Instant};
 
 mod datastore;
+use datastore::*;
 
 const FONT: Font = Font::External {
     name: "PixelMplus12-Regular",
@@ -90,7 +91,10 @@ impl Application for GUI {
                 }
                 _ => {}
             },
-            Message::Send => {}
+            Message::Send => {
+                let dao = RecordFirestoreDao(FirestoreConnection::new());
+                update(dao, self.total_duration);
+            }
         }
         Command::none()
     }

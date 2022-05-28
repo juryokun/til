@@ -1,24 +1,25 @@
-use chrono::{Date, DateTime, Local, TimeZone, Utc};
+use super::*;
+use chrono::{DateTime, Local, TimeZone};
 use firestore_db_and_auth::{documents, documents::List, dto, Credentials, ServiceSession};
 use serde::{Deserialize, Serialize};
 
-struct FirestoreConnection {
+pub struct FirestoreConnection {
     auth: ServiceSession,
 }
 
 impl FirestoreConnection {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let cred = Credentials::from_file("firebase-key.json").unwrap();
         let auth = ServiceSession::new(cred).unwrap();
         Self { auth: auth }
     }
 }
 
-trait RecordDao {
+pub trait RecordDao {
     fn push_db(&self, record: Record);
 }
 
-struct RecordFirestoreDao(FirestoreConnection);
+pub struct RecordFirestoreDao(pub FirestoreConnection);
 impl RecordDao for RecordFirestoreDao {
     fn push_db(&self, record: Record) {
         #[derive(Serialize, Deserialize, Debug)]
@@ -26,10 +27,11 @@ impl RecordDao for RecordFirestoreDao {
             record: String,
             timestamp: String,
         }
-        let format_string = "%Y-%m-%d %H:%M:%S";
+        let record_sec = record.record.as_secs();
+        let record_mili = record.record.as_millis();
         let data = RecordFirestore {
-            record: record.record.format(format_string).to_string(),
-            timestamp: record.timestamp.format(format_string).to_string(),
+            record: format!("{}.{:0>2}", record_sec, record_mili),
+            timestamp: record.timestamp.format("%Y-%m-%d %H:%M:%S").to_string(),
         };
 
         documents::write(
@@ -50,13 +52,13 @@ impl<R: RecordDao> RecordService<R> {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-struct Record {
-    record: DateTime<Local>,
+pub struct Record {
+    record: Duration,
     timestamp: DateTime<Local>,
 }
 
 impl Record {
-    fn create(datetime: DateTime<Local>) -> Self {
+    pub fn create(datetime: Duration) -> Self {
         Self {
             record: datetime,
             timestamp: Local::now(),
@@ -72,7 +74,7 @@ impl Record {
     // }
 }
 
-fn update<R: RecordDao>(dao: R, time: DateTime<Local>) {
+pub fn update<R: RecordDao>(dao: R, time: Duration) {
     let data = Record::create(time);
 
     let record_service = RecordService(dao);
@@ -130,19 +132,16 @@ mod test {
     fn test_update() {
         impl DoTest for TestSuite {
             fn test_logic(&self) {
-                let target = Record {
-                    record: Local.ymd(2022, 5, 1).and_hms(12, 10, 9),
-                    timestamp: Local::now(),
-                };
+                let target = Duration::new(60, 0);
 
                 let dao = RecordTestDao;
                 // let dao = RecordFirestoreDao(FirestoreConnection::new());
-                update(dao, target.record);
+                update(dao, target);
 
                 let reader = BufReader::new(File::open("record.json").unwrap());
                 let record: Record = serde_json::from_reader(reader).unwrap();
 
-                assert_eq!(target.record, record.record);
+                assert_eq!(target, record.record);
             }
         }
         let test = TestSuite;
