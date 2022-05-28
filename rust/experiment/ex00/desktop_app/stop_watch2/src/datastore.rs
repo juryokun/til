@@ -64,14 +64,6 @@ impl Record {
             timestamp: Local::now(),
         }
     }
-
-    // fn transform_for_db(&self) -> RecordFirebase {
-    //     let format_string = "%Y-%m-%d %H:%M:%S";
-    //     RecordFirebase {
-    //         record: self.record.format(format_string).to_string(),
-    //         timestamp: self.record.format(format_string).to_string(),
-    //     }
-    // }
 }
 
 pub fn update<R: RecordDao>(dao: R, time: Duration) {
@@ -90,8 +82,6 @@ fn fetch_list() -> Vec<Record> {
     let mut rel_vec = vec![];
     for doc in documents {
         let (data, _document) = doc.unwrap();
-        // println!("{:?}", data);
-        // println!("{:}", data.record.format("%Y-%m-%d %H:%M:%S").to_string());
         rel_vec.push(data);
     }
 

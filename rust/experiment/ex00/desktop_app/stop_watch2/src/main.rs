@@ -23,6 +23,7 @@ struct GUI {
     last_update: Instant,
     total_duration: Duration,
     tick_state: TickState,
+    register_state: RegisterState,
     start_stop_button_state: button::State,
     reset_button_state: button::State,
     send_button_state: button::State,
@@ -34,12 +35,18 @@ pub enum Message {
     Stop,
     Reset,
     Update,
-    Send,
+    Register,
+    NotRegister,
 }
 
 pub enum TickState {
     Stopped,
     Ticking,
+}
+
+pub enum RegisterState {
+    Active,
+    UnActive,
 }
 
 impl Application for GUI {
@@ -53,6 +60,7 @@ impl Application for GUI {
                 last_update: Instant::now(),
                 total_duration: Duration::default(),
                 tick_state: TickState::Stopped,
+                register_state: RegisterState::UnActive,
                 start_stop_button_state: button::State::new(),
                 reset_button_state: button::State::new(),
                 send_button_state: button::State::new(),
@@ -74,14 +82,17 @@ impl Application for GUI {
             Message::Start => {
                 self.tick_state = TickState::Ticking;
                 self.last_update = Instant::now();
+                self.register_state = RegisterState::UnActive;
             }
             Message::Stop => {
                 self.tick_state = TickState::Stopped;
                 self.total_duration += Instant::now() - self.last_update;
+                self.register_state = RegisterState::Active;
             }
             Message::Reset => {
                 self.last_update = Instant::now();
                 self.total_duration = Duration::default();
+                self.register_state = RegisterState::UnActive;
             }
             Message::Update => match self.tick_state {
                 TickState::Ticking => {
@@ -91,10 +102,12 @@ impl Application for GUI {
                 }
                 _ => {}
             },
-            Message::Send => {
+            Message::Register => {
                 let dao = RecordFirestoreDao(FirestoreConnection::new());
                 update(dao, self.total_duration);
+                self.register_state = RegisterState::UnActive;
             }
+            Message::NotRegister => {}
         }
         Command::none()
     }
@@ -131,20 +144,28 @@ impl Application for GUI {
             TickState::Ticking => Message::Stop,
         };
 
+        let register_text = match self.register_state {
+            RegisterState::Active => Text::new("Register")
+                .horizontal_alignment(HorizontalAlignment::Center)
+                .font(FONT),
+            RegisterState::UnActive => Text::new("-")
+                .horizontal_alignment(HorizontalAlignment::Center)
+                .font(FONT),
+        };
+        let register_message = match self.register_state {
+            RegisterState::Active => Message::Register,
+            RegisterState::UnActive => Message::NotRegister,
+        };
+
         // init widgets
         let tick_text = Text::new(duration_text).font(FONT).size(60);
         let start_stop_button = Button::new(&mut self.start_stop_button_state, start_stop_text)
             .min_width(80)
             .on_press(start_stop_message);
 
-        let send_button = Button::new(
-            &mut self.send_button_state,
-            Text::new("Send")
-                .horizontal_alignment(HorizontalAlignment::Center)
-                .font(FONT),
-        )
-        .min_width(80)
-        .on_press(Message::Send);
+        let send_button = Button::new(&mut self.send_button_state, register_text)
+            .min_width(80)
+            .on_press(register_message);
 
         let reset_button = Button::new(
             &mut self.reset_button_state,
