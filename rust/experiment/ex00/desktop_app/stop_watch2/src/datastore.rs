@@ -100,33 +100,52 @@ mod test {
     use super::*;
     use std::fs::File;
     use std::io::{BufReader, BufWriter, Read, Write};
+    const TEST_FILE: &str = "record.json";
 
     struct RecordTestDao;
     impl RecordDao for RecordTestDao {
         fn push_db(&self, record: Record) {
-            let mut writer = BufWriter::new(File::create("record.json").unwrap());
+            let mut writer = BufWriter::new(File::create(TEST_FILE).unwrap());
             let data = serde_json::to_string(&record).unwrap();
             writer.write(data.as_bytes());
         }
     }
+    struct TestSuite;
+    trait DoTest {
+        fn init(&self) {
+            std::fs::remove_file(TEST_FILE);
+        }
+        fn done(&self) {
+            std::fs::remove_file(TEST_FILE);
+        }
+        fn run_test(&self) {
+            self.init();
+            self.test_logic();
+            self.done();
+        }
+        fn test_logic(&self);
+    }
 
     #[test]
     fn test_update() {
-        std::fs::remove_file("record.json");
+        impl DoTest for TestSuite {
+            fn test_logic(&self) {
+                let target = Record {
+                    record: Local.ymd(2022, 5, 1).and_hms(12, 10, 9),
+                    timestamp: Local::now(),
+                };
 
-        let target = Record {
-            record: Local.ymd(2022, 5, 1).and_hms(12, 10, 9),
-            timestamp: Local::now(),
-        };
+                let dao = RecordTestDao;
+                // let dao = RecordFirestoreDao(FirestoreConnection::new());
+                update(dao, target.record);
 
-        let dao = RecordTestDao;
-        // let dao = RecordFirestoreDao(FirestoreConnection::new());
-        update(dao, target.record);
+                let reader = BufReader::new(File::open("record.json").unwrap());
+                let record: Record = serde_json::from_reader(reader).unwrap();
 
-        let reader = BufReader::new(File::open("record.json").unwrap());
-        let record: Record = serde_json::from_reader(reader).unwrap();
-
-        assert_eq!(target.record, record.record);
-        std::fs::remove_file("record.json");
+                assert_eq!(target.record, record.record);
+            }
+        }
+        let test = TestSuite;
+        test.run_test()
     }
 }
