@@ -1,72 +1,71 @@
 use firestore_db_and_auth::{documents, documents::List, dto, Credentials, ServiceSession};
 use serde::{Deserialize, Serialize};
 
-// pub trait IsSvcA {
-//     fn a(&self) -> String;
-// }
-pub trait FireBaseDao {
-    fn prd_data_update(&self, data: Data);
+#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
+struct Data {
+    id: u8,
 }
 
-// pub trait SvcA {}
-pub struct FirebaseConnection {
+struct Firestore {
     auth: ServiceSession,
 }
 
-// pub trait IsSvcB {
-//     fn b(&self) -> String;
-// }
-pub trait DbService {
-    fn data_update(&self, data: Data);
+trait Repository<T, U> {
+    fn create(&mut self, new_params: T);
 }
 
-// pub trait SvcB: IsSvcA {}
-pub trait Dao: FireBaseDao {}
-
-// impl<T: SvcA> IsSvcA for T {
-//     fn a(&self) -> String {
-//         "svc-a".to_owned()
-//     }
-// }
-impl FireBaseDao for FirebaseConnection {
-    fn prd_data_update(&self, data: Data) {
+impl Repository<u8, Data> for Firestore {
+    fn create(&mut self, id: u8) {
+        let d = Data { id: id };
         documents::write(
             &self.auth,
             "for-test",
             Some("AABBCCDD"),
-            &data,
+            &d,
             documents::WriteOptions::default(),
         );
     }
 }
 
-// impl<T: SvcB> IsSvcB for T {
-//     fn b(&self) -> String {
-//         format!("{}{}", self.a(), "svc-b")
-//     }
-// }
-impl<T: Dao> DbService for T {
-    fn data_update(&self, data: Data) {
-        self.prd_data_update(data);
+struct Service<U: Repository<u8, Data>> {
+    repository: U,
+}
+
+impl<U: Repository<u8, Data>> Service<U> {
+    pub fn create_data(&mut self, id: u8) {
+        self.repository.create(id)
     }
 }
 
-// pub fn use_b<B: IsSvcB>(b: B) -> String {
-//     format!("[got] {}", b.b())
-// }
-pub fn update<B: DbService>(service: B, data: Data) {
-    service.data_update(data)
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Data {
-    id: String,
-}
-
-struct Hub{}
-impl DbService for Hub
-impl
-
 fn main() {
-    let service = DbService{};
+    let cred = Credentials::from_file("firebase-key.json").unwrap();
+    let auth = ServiceSession::new(cred).unwrap();
+    let db: Firestore = Firestore { auth: auth };
+
+    let mut service = Service::<Firestore> { repository: db };
+    service.create_data(8);
+}
+
+mod test {
+    use super::*;
+
+    struct TestDb {
+        data: Vec<Data>,
+    }
+
+    impl Repository<u8, Data> for TestDb {
+        fn create(&mut self, id: u8) {
+            let d = Data { id: id };
+            self.data.push(d);
+        }
+    }
+
+    #[test]
+    fn test_create() {
+        let db: TestDb = TestDb { data: Vec::new() };
+        let mut service = Service::<TestDb> { repository: db };
+        service.create_data(8);
+
+        println!("{:?}", service.repository.data);
+    }
 }
