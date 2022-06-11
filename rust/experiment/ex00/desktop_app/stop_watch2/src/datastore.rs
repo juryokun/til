@@ -3,11 +3,11 @@ use chrono::{DateTime, Local};
 use firestore_db_and_auth::{documents, documents::List, dto, Credentials, ServiceSession};
 use serde::{Deserialize, Serialize};
 
-pub struct FirestoreConnection {
+pub struct Firestore {
     auth: ServiceSession,
 }
 
-impl FirestoreConnection {
+impl Firestore {
     pub fn new() -> Self {
         let cred = Credentials::from_file("firebase-key.json").unwrap();
         let auth = ServiceSession::new(cred).unwrap();
@@ -15,13 +15,12 @@ impl FirestoreConnection {
     }
 }
 
-pub trait RecordDao {
-    fn push_db(&self, record: Record);
+pub trait Repository<T> {
+    fn push_db(&mut self, record: T);
 }
 
-pub struct RecordFirestoreDao(pub FirestoreConnection);
-impl RecordDao for RecordFirestoreDao {
-    fn push_db(&self, record: Record) {
+impl Repository<Record> for Firestore {
+    fn push_db(&mut self, record: Record) {
         #[derive(Serialize, Deserialize, Debug)]
         struct RecordFirestore {
             record: String,
@@ -35,7 +34,7 @@ impl RecordDao for RecordFirestoreDao {
         };
 
         documents::write(
-            &self.0.auth,
+            &self.auth,
             "stop-watch",
             Some(data.timestamp.clone()),
             &data,
@@ -44,14 +43,22 @@ impl RecordDao for RecordFirestoreDao {
     }
 }
 
-struct RecordService<R: RecordDao>(R);
-impl<R: RecordDao> RecordService<R> {
-    fn push_record(&self, record: Record) {
-        self.0.push_db(record);
+pub struct Service<R: Repository<Record>> {
+    repository: R,
+}
+
+impl<R: Repository<Record>> Service<R> {
+    pub fn new(repository: R) -> Self {
+        Self {
+            repository: repository,
+        }
+    }
+    pub fn push_record(&mut self, record: Record) {
+        self.repository.push_db(record)
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Copy, Clone)]
 pub struct Record {
     record: Duration,
     timestamp: DateTime<Local>,
@@ -64,13 +71,6 @@ impl Record {
             timestamp: Local::now(),
         }
     }
-}
-
-pub fn update<R: RecordDao>(dao: R, time: Duration) {
-    let data = Record::create(time);
-
-    let record_service = RecordService(dao);
-    record_service.push_record(data);
 }
 
 fn fetch_list() -> Vec<Record> {
@@ -94,50 +94,25 @@ mod test {
     use std::io::{BufReader, BufWriter, Read, Write};
     const TEST_FILE: &str = "record.json";
 
-    struct RecordTestDao;
-    impl RecordDao for RecordTestDao {
-        fn push_db(&self, record: Record) {
-            let mut writer = BufWriter::new(File::create(TEST_FILE).unwrap());
-            let data = serde_json::to_string(&record).unwrap();
-            writer.write(data.as_bytes());
-        }
+    struct MockDb {
+        data: Vec<Record>,
     }
-    struct TestSuite;
-    trait DoTest {
-        fn init(&self) {
-            std::fs::remove_file(TEST_FILE);
+    impl Repository<Record> for MockDb {
+        fn push_db(&mut self, record: Record) {
+            self.data.push(record);
         }
-        fn done(&self) {
-            std::fs::remove_file(TEST_FILE);
-        }
-        fn run_test(&self) {
-            self.init();
-            self.test_logic();
-            self.done();
-        }
-        fn test_logic(&self);
     }
 
     #[test]
     fn test_update() {
-        impl DoTest for TestSuite {
-            fn test_logic(&self) {
-                let target = Duration::new(60, 0);
+        let record = Record {
+            record: Duration::new(60, 0),
+            timestamp: Local::now(),
+        };
 
-                let dao = RecordTestDao;
-                update(dao, target);
-
-                let reader = BufReader::new(File::open("record.json").unwrap());
-                let record: Record = serde_json::from_reader(reader).unwrap();
-
-                assert_eq!(target, record.record);
-
-                // 作成日時は現在時刻との差が0秒であることで正とする
-                let duration_created_datetime = Local::now() - record.timestamp;
-                assert_eq!(duration_created_datetime.num_seconds(), 0);
-            }
-        }
-        let test = TestSuite;
-        test.run_test()
+        let connection: MockDb = MockDb { data: Vec::new() };
+        let mut service = Service::<MockDb>::new(connection);
+        service.push_record(record);
+        assert_eq!(service.repository.data[0], record.clone());
     }
 }
