@@ -59,10 +59,49 @@ fn run_enum() {
     println!("{:?}", e2);
 }
 
+fn run_option() {
+    fn ret_option(v: bool) -> Option<usize> {
+        if v {
+            Some(100)
+        } else {
+            None
+        }
+    }
+}
+
+fn run_result() {
+    let result1: Result<i32, String> = Ok(200);
+
+    match result1 {
+        Ok(code) => println!("code: {}", code),
+        Err(err) => println!("Err: {}", err),
+    };
+
+    let result2: Result<i32, String> = Ok(200);
+
+    if let Ok(code) = result2 {
+        println!("code: {}", code);
+    }
+
+    let result3: Result<i32, String> = Ok(200);
+    println!("code: {}", result3.unwrap_or(-1)); //code: 200
+    let result4: Result<i32, String> = Err("Error".to_string());
+    println!("code: {}", result4.unwrap_or(-1)); //code: -1
+
+    fn func(code: i32) -> Result<i32, String> {
+        println!("code: {}", code);
+        Ok(100)
+    }
+    let result5: Result<i32, String> = Ok(200);
+    let next_result = result5.and_then(func); //funcが実行される
+    let result6: Result<i32, String> = Err("error".to_string());
+    let next_result = result6.and_then(func); //funcが実行されない
+}
+
 mod tests {
     use super::*;
     #[test]
     fn test_run() {
-        run_enum();
+        run_result();
     }
 }
