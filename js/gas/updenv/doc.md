@@ -2,19 +2,30 @@
 {
     "env": "dev",
     "app": "pasnavi",
-    "webOrBatch": "web",
+    "appType": "web",
     "svn": "https://----",
     "message": "利用目的",
-    "appSettings": {
-        "pasnavi": "target_pasnavi",
-        "enavi": "target_enavi",
-    },
-    "enaviBatchSettings": {
-        "batch": "target_tok_batch",
-        "appSettings": {
-            "enavi": "target_enavi",
-        }
-    }
+    "appSettings": [
+        {
+            "schema": "pasnavi",
+            "connectionSchema": "target_pasnavi",
+        },
+        {
+            "schema": "enavi",
+            "connectionSchema": "target_enavi",
+        },
+    ],
+    "enaviBatchSettings": [
+        {
+            "batch": "target_tok_batch",
+            "appSettings": [
+                {
+                    "schema": "enavi",
+                    "connectionSchema": "target_enavi",
+                },
+            ]
+        },
+    ]
 }
 ```
 
