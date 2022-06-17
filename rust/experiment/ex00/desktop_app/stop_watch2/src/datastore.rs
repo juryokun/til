@@ -8,19 +8,19 @@ pub struct Firestore {
 }
 
 impl Firestore {
-    pub fn new() -> Self {
-        let cred = Credentials::from_file("firebase-key.json").unwrap();
-        let auth = ServiceSession::new(cred).unwrap();
-        Self { auth: auth }
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        let cred = Credentials::from_file("firebase-key.json")?;
+        let auth = ServiceSession::new(cred)?;
+        Ok(Self { auth: auth })
     }
 }
 
 pub trait Repository<T> {
-    fn push_db(&mut self, record: T);
+    fn push_db(&mut self, record: T) -> Result<(), Box<dyn std::error::Error>>;
 }
 
 impl Repository<Record> for Firestore {
-    fn push_db(&mut self, record: Record) {
+    fn push_db(&mut self, record: Record) -> Result<(), Box<dyn std::error::Error>> {
         #[derive(Serialize, Deserialize, Debug)]
         struct RecordFirestore {
             record: String,
@@ -39,7 +39,8 @@ impl Repository<Record> for Firestore {
             Some(data.timestamp.clone()),
             &data,
             documents::WriteOptions::default(),
-        );
+        )?;
+        Ok(())
     }
 }
 
@@ -53,7 +54,7 @@ impl<R: Repository<Record>> Service<R> {
             repository: repository,
         }
     }
-    pub fn push_record(&mut self, record: Record) {
+    pub fn push_record(&mut self, record: Record) -> Result<(), Box<dyn std::error::Error>> {
         self.repository.push_db(record)
     }
 }
@@ -90,16 +91,13 @@ fn fetch_list() -> Vec<Record> {
 
 mod test {
     use super::*;
-    use std::fs::File;
-    use std::io::{BufReader, BufWriter, Read, Write};
-    const TEST_FILE: &str = "record.json";
-
     struct MockDb {
         data: Vec<Record>,
     }
     impl Repository<Record> for MockDb {
-        fn push_db(&mut self, record: Record) {
+        fn push_db(&mut self, record: Record) -> Result<(), Box<dyn std::error::Error>> {
             self.data.push(record);
+            Ok(())
         }
     }
 
@@ -112,7 +110,12 @@ mod test {
 
         let connection: MockDb = MockDb { data: Vec::new() };
         let mut service = Service::<MockDb>::new(connection);
-        service.push_record(record);
+        let result = service.push_record(record);
+
+        match result {
+            Ok(val) => assert_eq!(val, ()),
+            Err(_) => assert!(false),
+        }
         assert_eq!(service.repository.data[0], record.clone());
     }
 }

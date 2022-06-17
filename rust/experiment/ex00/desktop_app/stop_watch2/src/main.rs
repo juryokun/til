@@ -104,12 +104,11 @@ impl Application for GUI {
                 _ => {}
             },
             Message::Register => {
-                let connection: Firestore = Firestore::new();
-                let mut service = Service::<Firestore>::new(connection);
-
-                let record = Record::create(self.total_duration);
-                service.push_record(record);
-
+                if let Ok(connection) = Firestore::new() {
+                    let mut service = Service::<Firestore>::new(connection);
+                    let record = Record::create(self.total_duration);
+                    service.push_record(record);
+                }
                 self.register_state = RegisterState::UnActive;
             }
             Message::NotRegister => {}
