@@ -98,10 +98,29 @@ fn run_result() {
     let next_result = result6.and_then(func); //funcが実行されない
 }
 
+fn run_vec() {
+    let v1 = vec![1, 2, 3, 4, 5];
+    let v2 = vec![0; 5];
+    assert_eq!(v1[0], 1);
+
+    for element in &v2 {
+        println!("{}", element);
+    }
+}
+
+fn run_box() {
+    let byte_array = [b'h', b'e', b'l', b'l', b'o'];
+    print(Box::new(byte_array));
+
+    fn print(s: Box<[u8]>) {
+        println!("{:?}", s);
+    }
+}
+
 mod tests {
     use super::*;
     #[test]
     fn test_run() {
-        run_result();
+        run_box();
     }
 }
