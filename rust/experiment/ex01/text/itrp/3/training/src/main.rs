@@ -117,6 +117,103 @@ fn run_box() {
     }
 }
 
+fn control() {
+    let number = 1;
+    let result = if 0 <= number { number } else { -number };
+
+    let mut count = 0;
+    let result = loop {
+        count += 1;
+        if count == 10 {
+            break count;
+        }
+    };
+
+    let count: i32;
+    for count in 0..10 {
+        println!("count: {}", count);
+    }
+
+    let i: i32 = 1;
+    match i {
+        1 => println!("1"),
+        2 => println!("2"),
+        _ => println!("misc"),
+    }
+
+    enum Color {
+        Red,
+        Blue,
+        Green,
+    }
+    let c = Color::Red;
+    match c {
+        Color::Red => println!("Red"),
+        Color::Green => println!("Green"),
+        Color::Blue => println!("Blue"),
+    }
+
+    let result: Result<i32, String> = Ok(100);
+    let result_number = match result {
+        Ok(number) => number,
+        Err(message) => {
+            println!("Error: {}", message);
+            -1
+        }
+    };
+}
+
+fn run_itr() {
+    let it = Iter {
+        current: 0,
+        max: 10,
+    };
+    for num in it {
+        println!("{}", num);
+    }
+}
+struct Iter {
+    current: usize,
+    max: usize,
+}
+
+impl Iterator for Iter {
+    type Item = usize; //出力する型の紐付け
+
+    fn next(&mut self) -> Option<usize> {
+        self.current += 1;
+        if self.current - 1 < self.max {
+            Some(self.current - 1)
+        } else {
+            None
+        }
+    }
+}
+
+struct Person {
+    name: String,
+    age: u32,
+}
+
+impl Person {
+    fn say_name(&self) -> &Self {
+        println!("I am {}.", self.name);
+        self
+    }
+
+    fn say_age(&self) -> &Self {
+        println!("I am {} year(s) old.", self.age);
+        self
+    }
+}
+fn run_impl() {
+    let p = Person {
+        name: String::from("Taro"),
+        age: 20,
+    };
+    p.say_name().say_age();
+}
+
 mod tests {
     use super::*;
     #[test]
