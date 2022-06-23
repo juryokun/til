@@ -1,3 +1,4 @@
+mod trait_text;
 fn main() {
     unimplemented!();
 }
