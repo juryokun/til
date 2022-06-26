@@ -215,10 +215,25 @@ fn run_impl() {
     p.say_name().say_age();
 }
 
+use std::cell::RefCell;
+use std::rc::Rc;
+fn run_rc() {
+    let data: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(vec![]));
+    for i in 0..10 {
+        push_data(Rc::clone(&data), "a".to_string());
+        // push_data(data, "a".to_string());
+    }
+    println!("{:?}", data);
+}
+
+fn push_data(data: Rc<RefCell<Vec<String>>>, target: String) {
+    data.borrow_mut().push(target);
+}
+
 mod tests {
     use super::*;
     #[test]
     fn test_run() {
-        run_box();
+        run_rc();
     }
 }
