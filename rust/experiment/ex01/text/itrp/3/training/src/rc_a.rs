@@ -12,8 +12,6 @@ fn rc_run() {
         id: 1,
         cd: "aaa".to_string(),
     });
-    rc_t(Rc::clone(&a));
-    rc_t(Rc::clone(&a));
 }
 
 #[test]

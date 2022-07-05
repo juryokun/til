@@ -117,7 +117,12 @@ fn run_box() {
 
     fn print(s: Box<[u8]>) {
         println!("{:?}", s);
+        // println!("{:?}", *s);
     }
+
+    let a = Box::new("aaa".to_string());
+    let b = *a;
+    println!("{:?}", b);
 }
 
 fn control() {
@@ -236,6 +241,6 @@ mod tests {
     use super::*;
     #[test]
     fn test_run() {
-        run_rc();
+        run_box();
     }
 }
