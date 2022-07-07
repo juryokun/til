@@ -237,10 +237,46 @@ fn push_data(data: Rc<RefCell<Vec<String>>>, target: String) {
     data.borrow_mut().push(target);
 }
 
+use std::ops::Deref;
+struct MyBox<T>(T);
+
+impl<T> MyBox<T> {
+    fn new(x: T) -> MyBox<T> {
+        MyBox(x)
+    }
+}
+
+impl<T> Deref for MyBox<T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+fn run_deref() {
+    let x = 5;
+    let y = MyBox::new(x);
+
+    assert_eq!(5, x);
+    assert_eq!(5, *(y.deref()));
+    assert_eq!(5, *y);
+}
+
+fn hello(name: &str) {
+    println!("Hello, {}", name);
+}
+
+fn run_deref_c() {
+    let m = MyBox::new(String::from("Rust"));
+    // let m = String::from("Rust");
+
+    hello(&m);
+}
+
 mod tests {
     use super::*;
     #[test]
     fn test_run() {
-        run_box();
+        run_deref_c();
     }
 }
