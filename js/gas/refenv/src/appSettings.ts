@@ -11,27 +11,26 @@ class AppSettings {
         }
         return this.settings;
     }
+    getSettings() {
+        return this.settings;
+    }
 }
 
 class AppSetting {
     env: string;
     appInfo: AppInfo;
-    svn: string;
+    repository: string;
     message: string;
     limit: string;
-    dbConnections: Array<DbConnection>;
+    dbConnections: DbConnections;
 
     constructor(obj: any) {
         this.env = this.validEnv(obj.env);
         this.appInfo = new AppInfo(obj.appInfo);
-        this.svn = this.validSvn(obj.svn);
+        this.repository = this.validRepository(obj.repository);
         this.message = this.validMessage(obj.message);
         this.limit = this.validLimit(obj.limit);
-
-        this.dbConnections = new Array();
-        for (const connectionData of obj.dbConnections) {
-            this.dbConnections.push(new DbConnection(connectionData));
-        }
+        this.dbConnections = new DbConnections(obj.dbConnections);
     }
 
     validEnv(env: string) {
@@ -41,13 +40,13 @@ class AppSetting {
         }
         return env;
     }
-    validSvn(svn: string) {
+    validRepository(repository: string) {
         const pattern = /^https?:\/\/[\w/:%#\$&\?\(\)~\.=\+\-]+$/;
-        if (!pattern.test(svn)) {
-            const message = "svnリポジトリURL(svn)が設定されていません（設定値：" + svn + "）。";
+        if (!pattern.test(repository)) {
+            const message = "svnリポジトリURL(repository)が設定されていません（設定値：" + repository + "）。";
             throw new ValueError(this.constructor.name, message);
         }
-        return svn;
+        return repository;
     }
     validMessage(message: string) {
         // 必須ではないのでチェックしない
@@ -56,6 +55,25 @@ class AppSetting {
     validLimit(limit: string) {
         // 必須ではないのでチェックしない
         return limit;
+    }
+
+    getEnv() {
+        return this.env;
+    }
+    getRepository() {
+        return this.repository;
+    }
+    getMessage() {
+        return this.message;
+    }
+    getLimit() {
+        return this.limit;
+    }
+    getAppInfo() {
+        return this.appInfo;
+    }
+    getDbconnections() {
+        return this.dbConnections;
     }
 }
 
@@ -102,6 +120,31 @@ class AppInfo {
         }
         return subApp;
     }
+
+    getApp() {
+        return this.app;
+    }
+    getType() {
+        return this.type;
+    }
+    getSubApp() {
+        return this.subApp;
+    }
+}
+
+class DbConnections {
+    connections: { [schema: string]: DbConnection } = {};
+
+    constructor(dbConnections: any) {
+        for (const connection of dbConnections) {
+            const dbConnection = new DbConnection(connection);
+            this.connections[dbConnection.getSchema()] = dbConnection;
+        }
+    }
+    getConnectionShcema(schema: string) {
+        const connection = this.connections[schema];
+        return connection?.getConnectionSchema();
+    }
 }
 
 class DbConnection {
@@ -126,6 +169,13 @@ class DbConnection {
         }
         return connectionSchema;
     }
+
+    getSchema() {
+        return this.schema;
+    }
+    getConnectionSchema() {
+        return this.connectionSchema;
+    }
 }
 
 class ValueError extends Error {
@@ -136,7 +186,7 @@ class ValueError extends Error {
 }
 
 const testLoadFromJsonStr = () => {
-    const data = '[{"env":"dev","appInfo":{"app":"testApp1","type":"web","subApp":""},"svn":"https://----","message":"利用目的","limit":"2023/03/31","dbConnections":[{"schema":"testShcema","connectionSchema":"testConnectionSchema"},{"schema":"devSchema","connectionSchema":"devConnectionSchema"}]},{"env":"dev","appInfo":{"app":"testApp2","type":"batch","subApp":"subApp1"},"svn":"https://----","message":"利用目的","limit":"2023/03/31","dbConnections":[{"schema":"devSchema","connectionSchema":"devSchema00"}]}]';
+    const data = '[{"env":"dev","appInfo":{"app":"pasnavi","type":"web","subApp":""},"repository":"https://----","message":"利用目的","limit":"2023/03/31","dbConnections":[{"schema":"testSchema","connectionSchema":"testConnectionSchema"},{"schema":"devSchema","connectionSchema":"devConnectionSchema"}]},{"env":"dev","appInfo":{"app":"enavi","type":"batch","subApp":"subApp1"},"repository":"https://----","message":"利用目的","limit":"2023/03/31","dbConnections":[{"schema":"devSchema","connectionSchema":"devSchema00"}]}]';
 
     const appSettings = new AppSettings();
     const loadedData = appSettings.loadFromJsonStr(data);
@@ -144,19 +194,16 @@ const testLoadFromJsonStr = () => {
     let message = "";
     const data1 = loadedData[0];
     message += customAssertion(data1.env, "dev");
-    message += customAssertion(data1.appInfo.app, "testApp1");
+    message += customAssertion(data1.appInfo.app, "pasnavi");
     message += customAssertion(data1.appInfo.subApp, "");
-    message += customAssertion(data1.dbConnections[0].schema, "testSchema");
-    message += customAssertion(data1.dbConnections[0].connectionSchema, "testConnectionSchema");
-    message += customAssertion(data1.dbConnections[1].schema, "devSchema");
-    message += customAssertion(data1.dbConnections[1].connectionSchema, "devConnectionSchema");
+    message += customAssertion(data1.dbConnections.getConnectionShcema("testSchema"), "testConnectionSchema");
+    message += customAssertion(data1.dbConnections.getConnectionShcema("devSchema"), "devConnectionSchema");
 
     const data2 = loadedData[1];
     message += customAssertion(data2.env, "dev");
-    message += customAssertion(data2.appInfo.app, "testApp2");
+    message += customAssertion(data2.appInfo.app, "enavi");
     message += customAssertion(data2.appInfo.subApp, "subApp1");
-    message += customAssertion(data2.dbConnections[0].schema, "devSchema");
-    message += customAssertion(data2.dbConnections[0].connectionSchema, "devSchema00");
+    message += customAssertion(data1.dbConnections.getConnectionShcema("devSchema"), "devSchema00");
 
     if (message.length > 0) {
         Logger.log(message);
