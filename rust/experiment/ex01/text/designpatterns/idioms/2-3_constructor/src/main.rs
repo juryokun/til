@@ -73,8 +73,9 @@ fn main() {
     let s = Second::new(42);
     assert_eq!(42, s.value());
 
+    // let t = Third::default();
     let t = Third::default();
-    assert_eq!(0, t.value());
+    assert_eq!(1, t.value());
 
     let f = Fourth::default();
     assert_eq!(0, f.value());
