@@ -3,10 +3,25 @@ class AppTableSheets {
 
     constructor(appSettings: AppSettings) {
         for (const setting of appSettings.getSettings()) {
-            const sheet = new AppTableSheet();
+            const sheet = this.getAppTableSheet(setting);
             sheet.setData(setting);
-
             this.sheets.push(sheet);
+        }
+    }
+
+    getAppTableSheet(setting: AppSetting) {
+        const app = setting.getAppInfo().getApp();
+        const type = setting.getAppInfo().getType();
+
+        if (app === 'pasnavi' && type === 'web') {
+            return new PasnaviTableSheet();
+        }
+        return new AppTableSheet();
+    }
+
+    writeSpreadSheets() {
+        for (const sheet of this.sheets) {
+            sheet.writeSpreadSheet();
         }
     }
 }
@@ -19,7 +34,7 @@ class AppTableSheet {
     sheetName: string = 'default';
     sheet: GoogleAppsScript.Spreadsheet.Sheet;
     data: Data = {};
-    keyColumn: string;
+    keyColumns: Array<string> = Array();
     startColumn: string = 'B';
     endColumn: string = 'I';
     startRow: number = 3;
@@ -44,7 +59,7 @@ class AppTableSheet {
         let key = '';
         for (const map of maps) {
             if (map.type === 'key') {
-                key = this.getSettingValue(appSetting, map);
+                key += this.getSettingValue(appSetting, map);
             }
             tableRow.push(this.getSettingValue(appSetting, map));
         }
@@ -118,17 +133,23 @@ class AppTableSheet {
         let i = 0;
         for (const column of this.getColumnMaps()) {
             if (column.type === 'key') {
-                this.keyColumn = this.convertFromNumberToAlphabet(i + this.convertFromAlphabetToNumber(this.startColumn));
-                return;
+                const targetColumn = i + this.convertFromAlphabetToNumber(this.startColumn);
+                this.keyColumns.push(this.convertFromNumberToAlphabet(targetColumn));
             }
             i++;
         }
-        this.keyColumn = this.startColumn;
+        if (this.keyColumns.length === 0) {
+            this.keyColumns.push(this.startColumn);
+        }
     }
     getInsertRow(key: string) {
         for (let row = this.startRow; row <= this.endRow; row++) {
-            const range = this.keyColumn + row;
-            if (this.sheet.getRange(range).getValue() == key) {
+            let keyValue = '';
+            for (const column of this.keyColumns) {
+                const range = column + row;
+                keyValue += this.sheet.getRange(range).getValue();
+            }
+            if ( keyValue === key) {
                 return row;
             }
         }
@@ -176,19 +197,21 @@ const testDataSet = () => {
     const data = dataClass.getTestData();
 
     const appSettings = new AppSettings();
-    const loadedData = appSettings.loadFromJsonStr(data);
-    const sheet = new AppTableSheet();
+    appSettings.loadFromJsonStr(data);
 
-    for (const setting of loadedData) {
-        sheet.setData(setting);
-    }
-    sheet.writeSpreadSheet();
+    const sheets = new AppTableSheets(appSettings);
+    sheets.writeSpreadSheets()
 
-    const pasSheet = new PasnaviTableSheet();
-    for (const pasSetting of loadedData) {
-        pasSheet.setData(pasSetting);
-    }
-    pasSheet.writeSpreadSheet();
+    // for (const setting of loadedData) {
+    //     sheet.setData(setting);
+    // }
+    // sheet.writeSpreadSheet();
+    //
+    // const pasSheet = new PasnaviTableSheet();
+    // for (const pasSetting of loadedData) {
+    //     pasSheet.setData(pasSetting);
+    // }
+    // pasSheet.writeSpreadSheet();
 
     // let message = "";
     // message += customAssertion(sheet.data[0]['AA'][0], "pasnavi");
