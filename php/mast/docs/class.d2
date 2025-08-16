@@ -1,0 +1,148 @@
+direction:up
+FieldsInterface: {
+  shape: class
+  label: <Interface>\nFieldsInterface
+
+  getName(): string
+  getLabel(): string
+  getInputType(): string
+  getValue(): mixed
+  isEditable(): bool
+}
+
+AbstractField: {
+  shape: class
+  label: <Abstract>\nAbstractField
+
+  name: string
+  "label": string
+  inputType: string
+  value: mixed
+  editable: bool
+  getName(): string
+  getLabel(): string
+  isEditable(): bool
+}
+
+TextField: {
+  shape: class
+
+  getInputType: string
+  getValue(): string
+}
+
+SelectField: {
+  shape: class
+
+  getInputType: string
+  getValue(): string
+}
+
+NumberField: {
+  shape: class
+
+  getInputType: string
+  getValue(): string
+}
+
+AbstractField -> FieldsInterface: {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+  style.stroke-dash: 3
+}
+
+TextField -> AbstractField: {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+}
+
+SelectField -> AbstractField: {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+}
+
+NumberField -> AbstractField: {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+}
+
+UsersEditorService: {
+  shape: class
+
+  getFields(): string
+  getData(): "User[]"
+  updateData(): void
+}
+
+UsersEditorService -> TableEditorServiceInterface: {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+  style.stroke-dash: 3
+}
+
+ProductsEditorService: {
+  shape: class
+
+  getFields(): string
+  getData(): "Product[]"
+  updateData(): void
+}
+
+ProductsEditorService -> TableEditorServiceInterface: {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+  style.stroke-dash: 3
+}
+
+TableMenu: {
+  shape: class
+
+  select(): TableServiceFactoryInterface
+}
+
+TableServiceFactoryInterface: {
+  shape: class
+
+  createEditor(): TableEditorServiceInterface
+}
+
+UsersEditorServiceFactory: {
+  shape: class
+
+  createEditor(): UsersEditorService
+}
+
+ProductsEditorServiceFactory: {
+  shape: class
+
+  createEditor(): ProductsEditorService
+}
+
+TableEditorServiceInterface: {
+  shape: class
+  label: <Interface>\n TableEditorServiceInterface
+
+  getFields(): "AbstractField[]"
+  getData(): "mixed[]"
+  updateData(): void
+}
+
+TableMenu -> TableServiceFactoryInterface
+UsersEditorServiceFactory -> TableServiceFactoryInterface: {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+  style.stroke-dash: 3
+}
+ProductsEditorServiceFactory -> TableServiceFactoryInterface: {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: false
+  style.stroke-dash: 3
+}
+UsersEditorServiceFactory -> UsersEditorService: {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: true
+}
+ProductsEditorServiceFactory -> ProductsEditorService: {
+  target-arrowhead.shape: triangle
+  target-arrowhead.style.filled: true
+}
